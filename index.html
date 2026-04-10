@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture the Bugs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Welcome View ─────────────────────────────────────────── -->
+    <section id="welcome" class="view active">
+      <h1>Capture the Bugs</h1>
+      <p class="subtitle">Test your exploratory testing skills</p>
+
+      <div class="card">
+        <h2>How it works</h2>
+        <ol>
+          <li>Pick a target application below</li>
+          <li>Explore it thoroughly &mdash; try different inputs, poke around, look at everything</li>
+          <li>For each bug you notice, describe it in the report panel</li>
+          <li>When you think you've found everything, submit for evaluation</li>
+        </ol>
+        <p>An AI model running in your browser will match your reports against the known bug list and score your session. No data leaves your machine.</p>
+      </div>
+
+      <h2>Choose a target</h2>
+      <div id="target-list" class="target-list">
+        <p class="empty-state">Loading targets...</p>
+      </div>
+    </section>
+
+    <!-- ── Explore View (split layout) ──────────────────────────── -->
+    <section id="explore" class="view">
+      <div class="split-layout">
+        <div class="panel panel-app">
+          <div class="panel-header">
+            <h2 id="target-name">Target Application</h2>
+            <a id="target-popout" href="#" target="_blank" rel="noopener" class="btn btn-small">Pop out &nearr;</a>
+          </div>
+          <iframe id="target-frame" src="about:blank"></iframe>
+        </div>
+
+        <div class="panel panel-reports">
+          <div class="panel-header">
+            <h2>Your Findings</h2>
+            <span id="finding-count">0 findings</span>
+          </div>
+
+          <div id="findings-list" class="findings-scroll"></div>
+
+          <div class="report-actions">
+            <button id="add-finding-btn" class="btn btn-secondary btn-full">+ Add Finding</button>
+            <button id="evaluate-btn" class="btn btn-primary btn-full" disabled>I'm Done &mdash; Evaluate</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Results View ─────────────────────────────────────────── -->
+    <section id="results" class="view">
+      <h1>Your Results</h1>
+
+      <div id="loading" class="loading" style="display:none">
+        <div class="spinner"></div>
+        <p id="loading-text">Loading AI model...</p>
+      </div>
+
+      <div id="scorecard" style="display:none">
+        <div class="score-summary card">
+          <div class="score-row">
+            <div class="score-block">
+              <div class="score-big" id="score-found">0</div>
+              <div class="score-label">of <span id="score-total">0</span> bugs found</div>
+            </div>
+            <div class="score-block">
+              <div class="score-big" id="score-pct">0%</div>
+              <div class="score-label">coverage</div>
+            </div>
+            <div class="score-block">
+              <div class="score-big" id="score-points">0</div>
+              <div class="score-label">of <span id="score-total-points">0</span> points</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <h2>How Your Reports Matched</h2>
+          <div id="report-details"></div>
+        </div>
+
+        <div class="result-section">
+          <h2>Bugs You Found</h2>
+          <div id="matched-list"></div>
+        </div>
+
+        <div class="result-section">
+          <h2>Bugs You Missed</h2>
+          <p class="hint">Expand each category to see what you could look for next time.</p>
+          <div id="missed-list"></div>
+        </div>
+      </div>
+
+      <button id="restart-btn" class="btn btn-secondary" style="display:none">Start Over</button>
+    </section>
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
