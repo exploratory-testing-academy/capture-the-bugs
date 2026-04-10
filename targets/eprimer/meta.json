@@ -1,0 +1,9 @@
+{
+  "id": "eprimer",
+  "name": "E-Primer",
+  "description": "An e-prime checking tool that analyzes text for uses of the verb \"to be\".",
+  "appPath": "targets/eprimer/app/index.html",
+  "bugsModule": "targets/eprimer/bugs.js",
+  "sourceUrl": "https://maaretp.com/app/",
+  "attribution": "Test target from collections of Alan Richardson (eviltester)"
+}
