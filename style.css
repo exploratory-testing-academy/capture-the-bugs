@@ -407,6 +407,221 @@ h2 {
   border-radius: 6px 6px 0 0;
 }
 
+/* ── Live coverage strip (findings panel) ──────────────────────────────────── */
+.coverage-live {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem 0.6rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.cov-live-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.35rem;
+}
+#cov-live-msg {
+  font-weight: 500;
+  color: #374151;
+}
+.cov-msg-muted {
+  font-weight: 400 !important;
+  color: #999 !important;
+  font-style: italic;
+}
+.cov-live-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.cov-reset {
+  font-size: 0.72rem;
+  color: #666;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+}
+.cov-reset:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+#cov-hint-level {
+  font-size: 0.72rem;
+  color: #666;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+}
+.cov-bar {
+  height: 5px;
+  background: #eef0f2;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cov-bar-fill {
+  height: 100%;
+  width: 0;
+  background: #22c55e;
+  border-radius: 3px;
+  transition: width 0.25s ease;
+}
+.cov-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.45rem;
+}
+.cov-chip {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.cov-chip-hit {
+  background: #dcfce7;
+  color: #166534;
+}
+.cov-chip-typed {
+  background: #fef3c7;
+  color: #92400e;
+}
+/* `all` mode: the full checklist with copy-pasteable samples */
+.cov-live-list {
+  margin-top: 0.5rem;
+  max-height: 42vh;
+  overflow-y: auto;
+  display: none;
+}
+.cov-live-row {
+  padding: 0.35rem 0.4rem;
+  border-radius: 4px;
+  margin-bottom: 0.2rem;
+  background: #f9fafb;
+}
+.cov-live-hit {
+  background: #dcfce7;
+}
+.cov-live-typed {
+  background: #fef3c7;
+}
+.cov-live-row-head {
+  font-size: 0.78rem;
+  color: #374151;
+  margin-bottom: 0.2rem;
+}
+.cov-live-todo .cov-live-row-head {
+  color: #6b7280;
+}
+.cov-sample {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+.cov-sample code {
+  flex: 1;
+  font-size: 0.7rem;
+  background: #fff;
+  border: 1px solid #eef0f2;
+  border-radius: 3px;
+  padding: 0.15rem 0.3rem;
+  overflow-wrap: anywhere;
+  color: #4b5563;
+}
+.cov-sample-note {
+  font-size: 0.72rem;
+  color: #888;
+  font-style: italic;
+}
+.cov-copy {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cov-copy:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111;
+}
+.cov-copy:disabled {
+  cursor: default;
+  color: #bbb;
+}
+.cov-chip-empty {
+  font-size: 0.75rem;
+  color: #999;
+  font-style: italic;
+}
+
+/* ── Input coverage ────────────────────────────────────────────────────────── */
+.cov-group {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 1rem 0 0.4rem;
+}
+.cov-group:first-child {
+  margin-top: 0;
+}
+.cov-badge {
+  display: inline-block;
+  width: 1.1rem;
+  font-weight: 700;
+}
+.cov-hit summary {
+  background: #dcfce7;
+}
+.cov-hit summary:hover {
+  background: #cdf3dd;
+}
+.cov-typed summary {
+  background: #fef3c7;
+}
+.cov-typed summary:hover {
+  background: #fde9a9;
+}
+.cov-body {
+  padding: 0.6rem 0.75rem 0.75rem;
+  background: #fff;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.cov-why {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 0.4rem;
+}
+.cov-example code {
+  background: #f3f4f6;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+.cov-example {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+.cov-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  background: #f9fafb;
+  border: 1px solid #eef0f2;
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 800px) {
   .split-layout {
