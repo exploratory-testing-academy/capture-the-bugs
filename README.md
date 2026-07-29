@@ -1,8 +1,7 @@
 # Capture the Bugs
 
 An exploratory testing exercise. Pick a target application, explore it, write up
-the bugs you find, and get scored against a known bug list — plus a report on
-which *classes of input* you actually tried.
+the bugs you find, and get scored against a known bug list.
 
 **→ [exploratory-testing-academy.github.io/capture-the-bugs](https://exploratory-testing-academy.github.io/capture-the-bugs/)**
 
@@ -15,25 +14,8 @@ session data leaves your machine.
 1. Choose a target. It loads in the left panel, with your findings on the right.
 2. Explore. Write up each bug in your own words — the matching is semantic, so
    you don't need to guess anyone's phrasing.
-3. Submit for evaluation. You get bugs found, points, and input coverage.
-
-## Input coverage
-
-The exercise tracks which classes of input you put through the app, because a
-class you never tried is a set of bugs you had no way of seeing. Coverage is
-reported at the end alongside the bug score, and can be shown live while you
-explore via the **Hints** control in the findings panel:
-
-| Level | Shows while exploring |
-| --- | --- |
-| `off` | nothing |
-| `count` | a progress sentence only (the default) |
-| `detail` | also names the classes you have already exercised |
-| `all` | the full checklist, with a sample you can copy into the app |
-
-Even at `detail` the panel only ever names what you have already tried — never
-what you are missing. Append `?hints=off` to the URL to fix the level for a
-session, which overrides whatever the browser remembers.
+3. Submit for evaluation. You get the bugs you found, the ones you missed, and
+   your score.
 
 ## Running locally
 
@@ -47,8 +29,7 @@ python3 -m http.server 8000
 
 ## Tests
 
-Playwright covers the harness (input capture, coverage scoring, hint levels,
-the report) and characterises the answer key:
+Playwright covers the harness and characterises the answer key:
 
 ```bash
 npm install
