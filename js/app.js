@@ -1,4 +1,9 @@
 import { loadModel, evaluateReports } from './evaluator.js';
+import {
+  startCapture, stopCapture, getCapturedInputs, clearCapturedInputs, onCapture,
+  isCapturing
+} from './capture.js';
+import { computeCoverage, classifyValue } from './coverage.js';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let findings = [];
@@ -52,10 +57,19 @@ async function loadTargetList() {
 
 async function startTarget(meta) {
   const bugsModule = await import(`../${meta.bugsModule}`);
+
+  // Optional per-target list of input classes a tester should exercise.
+  let inputClasses = [];
+  if (meta.inputClassesModule) {
+    const mod = await import(`../${meta.inputClassesModule}`);
+    inputClasses = mod.inputClasses;
+  }
+
   target = {
     meta,
     bugs: bugsModule.bugs,
-    totalPoints: bugsModule.totalPoints
+    totalPoints: bugsModule.totalPoints,
+    inputClasses
   };
 
   // Restore findings for this target
@@ -65,8 +79,15 @@ async function startTarget(meta) {
 
   // Set up the explore view
   document.getElementById('target-name').textContent = meta.name;
-  document.getElementById('target-frame').src = meta.appPath;
+  const frame = document.getElementById('target-frame');
+  // Attach before setting src so the target's first load is observed.
+  startCapture(frame, meta.id);
+  frame.src = meta.appPath;
   document.getElementById('target-popout').href = meta.appPath;
+
+  // Refresh the live strip as inputs land, plus once now for restored state.
+  onCapture(renderLiveCoverage);
+  renderLiveCoverage();
 
   showView('explore');
   if (findings.length === 0) addFinding();
@@ -142,6 +163,8 @@ function renderResults(results) {
   const pct = Math.round((results.matchedCount / results.totalCount) * 100);
   document.getElementById('score-pct').textContent = `${pct}%`;
 
+  renderCoverage(computeCoverage(target.inputClasses, getCapturedInputs()));
+
   const detailsEl = document.getElementById('report-details');
   detailsEl.innerHTML = '';
   results.reportDetails.forEach((rd, i) => {
@@ -200,6 +223,274 @@ function renderResults(results) {
   });
 }
 
+// ── Input coverage ───────────────────────────────────────────────────────────
+
+// Captured values are arbitrary tester input: whitespace needs to stay visible
+// and a 31k-word paste needs truncating.
+function displayValue(v) {
+  if (v.length === 0) return '(submitted empty)';
+  if (v.trim().length === 0) {
+    return v.replace(/\n/g, '↵').replace(/\t/g, '→').replace(/ /g, '·');
+  }
+  const MAX = 120;
+  const oneLine = v.replace(/\n/g, ' ↵ ');
+  return oneLine.length > MAX
+    ? `${oneLine.slice(0, MAX)}… (${v.length} chars)`
+    : oneLine;
+}
+
+// ── Live coverage strip ──────────────────────────────────────────────────────
+
+// How much coverage feedback the tester sees *while exploring*. The end-of-run
+// report always shows everything — this only governs mid-session hinting.
+//   off    — nothing; the session stays a blind exploration
+//   count  — a progress sentence only, no hint as to which classes are left
+//   detail — also names the classes already exercised
+//   all    — the full checklist, including what hasn't been tried yet
+// `?hints=off` in the URL wins, so a facilitator can hand out a fixed link.
+const HINT_LEVELS = ['off', 'count', 'detail', 'all'];
+const hintSelect = document.getElementById('cov-hint-level');
+
+function resolveHintLevel() {
+  const fromUrl = new URLSearchParams(location.search).get('hints');
+  if (HINT_LEVELS.includes(fromUrl)) return fromUrl;
+  const stored = localStorage.getItem('ctb-hint-level');
+  if (HINT_LEVELS.includes(stored)) return stored;
+  return 'count';
+}
+
+let hintLevel = resolveHintLevel();
+
+// Naming un-hit classes mid-session would hand over the answer key, so even at
+// `detail` the strip only reports what the tester has already put through.
+function renderLiveCoverage() {
+  const strip = document.getElementById('coverage-live');
+  const bar = document.getElementById('cov-bar');
+  const chips = document.getElementById('cov-live-chips');
+  const msg = document.getElementById('cov-live-msg');
+
+  if (!target || target.inputClasses.length === 0) {
+    strip.style.display = 'none';
+    return;
+  }
+  strip.style.display = 'block';
+  hintSelect.value = hintLevel;
+
+  if (hintLevel === 'off') {
+    bar.style.display = 'none';
+    chips.style.display = 'none';
+    document.getElementById('cov-live-list').style.display = 'none';
+    msg.textContent = 'Coverage feedback hidden';
+    msg.className = 'cov-msg-muted';
+    return;
+  }
+
+  const cov = computeCoverage(target.inputClasses, getCapturedInputs());
+  bar.style.display = 'block';
+  msg.className = '';
+  msg.textContent = cov.coveredCount === 0
+    ? `We expect you to try ${cov.totalCount} kinds of input.`
+    : `We expect you've tried ${cov.coveredCount} of ${cov.totalCount} kinds of input.`;
+  document.getElementById('cov-live-fill').style.width = `${cov.percent}%`;
+
+  const list = document.getElementById('cov-live-list');
+
+  if (hintLevel === 'count') {
+    chips.style.display = 'none';
+    list.style.display = 'none';
+    return;
+  }
+
+  // `all` reveals the whole checklist with a copy-pasteable sample per class.
+  // The reasoning behind each one stays in the post-run report.
+  if (hintLevel === 'all') {
+    chips.style.display = 'none';
+    list.style.display = 'block';
+    list.innerHTML = '';
+    const state = new Map([
+      ...cov.covered.map(c => [c.id, 'hit']),
+      ...cov.typedOnly.map(c => [c.id, 'typed'])
+    ]);
+    for (const c of target.inputClasses) {
+      list.appendChild(liveRow(c, state.get(c.id) || 'todo'));
+    }
+    return;
+  }
+
+  list.style.display = 'none';
+  chips.style.display = 'flex';
+  chips.innerHTML = '';
+
+  const shown = [
+    ...cov.covered.map(c => ({ c, kind: 'hit' })),
+    ...cov.typedOnly.map(c => ({ c, kind: 'typed' }))
+  ];
+
+  if (shown.length === 0) {
+    chips.innerHTML =
+      '<span class="cov-chip-empty">Nothing submitted to the app yet.</span>';
+    return;
+  }
+
+  for (const { c, kind } of shown) {
+    const chip = document.createElement('span');
+    chip.className = `cov-chip cov-chip-${kind}`;
+    chip.textContent = c.label;
+    if (kind === 'typed') chip.title = 'Typed but not submitted — click through to count it';
+    chips.appendChild(chip);
+  }
+}
+
+hintSelect.addEventListener('change', () => {
+  hintLevel = hintSelect.value;
+  localStorage.setItem('ctb-hint-level', hintLevel);
+  renderLiveCoverage();
+});
+
+// Captured inputs persist per target, so re-entering a target resumes the old
+// session. This is the explicit way to start counting from zero again.
+document.getElementById('cov-reset').addEventListener('click', () => {
+  if (getCapturedInputs().length === 0) return;
+  clearCapturedInputs();
+  renderLiveCoverage();
+});
+
+const COV_BADGE = { hit: '✓', typed: '~', missed: '·', todo: '·' };
+
+// Samples may hold whitespace and invisible characters that must stay legible.
+// ZWJ is left alone so emoji sequences still render as one glyph.
+function sampleDisplay(s) {
+  const vis = s
+    .replace(/\r/g, '␍')
+    .replace(/\n/g, '↵')
+    .replace(/\t/g, '⇥')
+    .replace(/\u00A0/g, '␠')
+    .replace(/[\u200B\u200C\uFEFF]/g, '∅');
+  return vis.length > 90 ? `${vis.slice(0, 90)}… (${s.length} chars)` : vis;
+}
+
+// A copy-pasteable sample plus a copy button. Built with DOM calls rather than
+// markup so the raw sample never has to survive HTML escaping.
+function sampleBlock(c) {
+  const wrap = document.createElement('div');
+  wrap.className = 'cov-sample';
+
+  if (c.sample === undefined) {
+    const note = document.createElement('span');
+    note.className = 'cov-sample-note';
+    note.textContent = c.sampleNote || '';
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  const code = document.createElement('code');
+  code.textContent = c.sampleNote || sampleDisplay(c.sample);
+  wrap.appendChild(code);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cov-copy';
+  if (c.sample.length === 0) {
+    btn.textContent = '—';
+    btn.disabled = true;
+    btn.title = 'Nothing to copy — just submit with the box empty';
+  } else {
+    btn.textContent = 'Copy';
+    btn.title = 'Copy this input to the clipboard';
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        await navigator.clipboard.writeText(c.sample);
+        btn.textContent = 'Copied';
+      } catch {
+        btn.textContent = 'Copy failed';
+      }
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+    });
+  }
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function coverageRow(c, kind) {
+  const el = document.createElement('details');
+  el.className = `missed-category cov-${kind}`;
+  el.innerHTML = `
+    <summary><span class="cov-badge">${COV_BADGE[kind]}</span> ${escapeHtml(c.label)}</summary>
+    <div class="cov-body"><p class="cov-why">${escapeHtml(c.why)}</p></div>
+  `;
+  const body = el.querySelector('.cov-body');
+
+  if (kind === 'missed') {
+    body.appendChild(sampleBlock(c));
+    return el;
+  }
+
+  for (const v of new Set(c.hits.map(h => displayValue(h.value)))) {
+    const div = document.createElement('div');
+    div.className = 'cov-value';
+    div.textContent = v;
+    body.appendChild(div);
+  }
+  if (kind === 'typed') {
+    const note = document.createElement('p');
+    note.className = 'cov-why';
+    note.textContent =
+      'You typed this but never clicked through, so the app never processed it.';
+    body.appendChild(note);
+  }
+  return el;
+}
+
+// One row of the `all` checklist: state, label, and a sample to copy.
+function liveRow(c, kind) {
+  const row = document.createElement('div');
+  row.className = `cov-live-row cov-live-${kind}`;
+  const head = document.createElement('div');
+  head.className = 'cov-live-row-head';
+  head.innerHTML =
+    `<span class="cov-badge">${COV_BADGE[kind]}</span>${escapeHtml(c.label)}`;
+  row.appendChild(head);
+  row.appendChild(sampleBlock(c));
+  return row;
+}
+
+function renderCoverage(cov) {
+  const section = document.getElementById('coverage-section');
+  const block = document.getElementById('score-classes-block');
+
+  // Targets without an inputClasses module simply have no coverage to show.
+  if (cov.totalCount === 0) {
+    section.style.display = 'none';
+    block.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  block.style.display = 'block';
+
+  document.getElementById('score-classes').textContent = cov.coveredCount;
+  document.getElementById('score-total-classes').textContent = cov.totalCount;
+
+  const list = document.getElementById('coverage-list');
+  list.innerHTML = '';
+
+  const groups = [
+    ['Exercised', cov.covered, 'hit'],
+    ['Typed but not submitted', cov.typedOnly, 'typed'],
+    ['Never tried', cov.missed, 'missed']
+  ];
+
+  for (const [title, items, kind] of groups) {
+    if (items.length === 0) continue;
+    const h = document.createElement('h3');
+    h.className = 'cov-group';
+    h.innerHTML = `${title} <span class="missed-count">(${items.length})</span>`;
+    list.appendChild(h);
+    items.forEach(c => list.appendChild(coverageRow(c, kind)));
+  }
+}
+
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
@@ -254,8 +545,54 @@ evaluateBtn.addEventListener('click', () => {
 restartBtn.addEventListener('click', () => {
   findings = [];
   saveFindingsToStorage();
+  clearCapturedInputs();
+  stopCapture();
   showView('welcome');
 });
+
+// ── Inspection hooks (DevTools) ───────────────────────────────────────────────
+window.__ctb = {
+  inputs: getCapturedInputs,
+
+  // Whether capture is live on the target document yet.
+  capturing: isCapturing,
+
+  // Which of the target's input classes the session actually exercised.
+  coverage() {
+    if (!target) return 'Pick a target first.';
+    const cov = computeCoverage(target.inputClasses, getCapturedInputs());
+    console.table(cov.classResults.map(c => ({
+      class: c.id,
+      status: c.hit ? 'hit' : c.typedOnly ? 'typed, not submitted' : 'missed',
+      inputs: c.hits.length,
+      probes: c.why
+    })));
+    console.info(
+      `[ctb] ${cov.coveredCount}/${cov.totalCount} input classes exercised (${cov.percent}%)`
+    );
+    return cov;
+  },
+
+  // Classes a single string would land in — handy for sanity-checking detectors.
+  classify: (value) => classifyValue(target ? target.inputClasses : [], value),
+
+  // Discard captured inputs for the current target and recount from zero.
+  reset() {
+    clearCapturedInputs();
+    renderLiveCoverage();
+    return 'Captured inputs cleared.';
+  },
+
+  // Renders just the coverage block, skipping the model download. Dev aid for
+  // iterating on this section without running a full evaluation.
+  previewCoverage() {
+    if (!target) return 'Pick a target first.';
+    showView('results');
+    loading.style.display = 'none';
+    scorecard.style.display = 'block';
+    renderCoverage(computeCoverage(target.inputClasses, getCapturedInputs()));
+  }
+};
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 loadTargetList();

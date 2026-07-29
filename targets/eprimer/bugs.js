@@ -573,6 +573,72 @@ export const bugs = [
     matchText: "The application has no privacy notice or privacy policy. There is no information about how user data is handled or stored. A privacy policy page or statement is completely absent.",
     difficulty: 2,
     points: 10
+  },
+
+  // ─── Tokenizer edge cases (60–64) ──────────────────────────────────────────
+  // Each of these was observed directly against the app while building the
+  // input-class coverage list. Cases already covered above are deliberately
+  // absent: tabs fall under #12, violations exceeding words under #14,
+  // plural possessives under #9, and markup false positives under #6.
+  {
+    id: 60,
+    title: "Digit next to letters creates a false violation",
+    category: "E-Prime Detection",
+    inputTriggerable: true,
+    triggerPattern: "Input contains a digit directly against letters that spell a to-be form, e.g. 7am, 10am, is2be",
+    matchText: "A digit touching letters splits the word and the leftover letters get flagged. Writing a time like 7am makes the tool report am as a discouraged word even though nobody wrote the verb am. Numbers stuck to letters invent violations that are not in the text.",
+    difficulty: 3,
+    points: 15
+  },
+  {
+    id: 61,
+    title: "Hyphenated words split and flag the second half",
+    category: "E-Prime Detection",
+    inputTriggerable: true,
+    triggerPattern: "Input contains a hyphenated word whose second half is a to-be form, e.g. well-being, light-being",
+    matchText: "A hyphen breaks a word apart so the second half is checked on its own. Writing well-being reports being as a violation, but well-being names a state and contains no verb. Compound words joined by hyphens produce false violations.",
+    difficulty: 3,
+    points: 15
+  },
+  {
+    id: 62,
+    title: "Lone punctuation counted as a word",
+    category: "Word Count",
+    inputTriggerable: true,
+    triggerPattern: "Input contains a standalone punctuation mark surrounded by spaces, e.g. a dash used as punctuation: one - two",
+    matchText: "A punctuation mark standing on its own between spaces is counted as a word. Writing one - two reports three words because the dash is counted. Any lone symbol surrounded by spaces inflates the word count above the number of real words.",
+    difficulty: 2,
+    points: 10
+  },
+  {
+    id: 63,
+    title: "Words on separate lines are joined in the output",
+    category: "Display",
+    inputTriggerable: true,
+    triggerPattern: "Input contains words separated by a newline with no spaces, e.g. first then Enter then second",
+    matchText: "Words written on separate lines are run together in the result. Typing first, pressing Enter and typing second displays firstsecond as one word, and an empty paragraph appears before it. The line break is emitted before the pending word is written out, so text either side of a newline is glued together in the output.",
+    difficulty: 3,
+    points: 15
+  },
+  {
+    id: 64,
+    title: "Typed HTML entities are decoded in the output",
+    category: "Display",
+    inputTriggerable: true,
+    triggerPattern: "Input contains an HTML entity written out literally, e.g. &lt; or &amp; or &#39;",
+    matchText: "Typing an HTML entity makes the tool print the character it stands for instead of the text that was written. Entering &lt; shows a < in the result. Ampersands are never escaped on the way out even though angle brackets are, so entity text is interpreted rather than displayed as written.",
+    difficulty: 4,
+    points: 20
+  },
+  {
+    id: 65,
+    title: "Invisible characters produce violations in a single word",
+    category: "E-Prime Detection",
+    inputTriggerable: true,
+    triggerPattern: "Input contains a zero-width or invisible character between letters, e.g. is<ZWSP>being pasted from a web page",
+    matchText: "An invisible character between letters splits a word for violation checking while the display shows one continuous word. Pasted text can report two discouraged words inside what looks like a single word, with nothing on screen to explain where the split came from.",
+    difficulty: 4,
+    points: 20
   }
 ];
 

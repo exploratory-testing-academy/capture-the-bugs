@@ -48,6 +48,25 @@
             <span id="finding-count">0 findings</span>
           </div>
 
+          <div id="coverage-live" class="coverage-live">
+            <div class="cov-live-head">
+              <span id="cov-live-msg">Coverage feedback hidden</span>
+              <span class="cov-live-controls">
+                <select id="cov-hint-level" title="How much coverage feedback to show while exploring">
+                  <option value="off">Hints: off</option>
+                  <option value="count">Hints: count</option>
+                  <option value="detail">Hints: detail</option>
+                  <option value="all">Hints: show all</option>
+                </select>
+                <button id="cov-reset" class="cov-reset" type="button"
+                  title="Start a fresh session: discard the inputs captured for this target">Reset</button>
+              </span>
+            </div>
+            <div class="cov-bar" id="cov-bar"><div class="cov-bar-fill" id="cov-live-fill"></div></div>
+            <div id="cov-live-chips" class="cov-chips"></div>
+            <div id="cov-live-list" class="cov-live-list"></div>
+          </div>
+
           <div id="findings-list" class="findings-scroll"></div>
 
           <div class="report-actions">
@@ -82,7 +101,17 @@
               <div class="score-big" id="score-points">0</div>
               <div class="score-label">of <span id="score-total-points">0</span> points</div>
             </div>
+            <div class="score-block" id="score-classes-block">
+              <div class="score-big" id="score-classes">0</div>
+              <div class="score-label">of <span id="score-total-classes">0</span> input classes</div>
+            </div>
           </div>
+        </div>
+
+        <div class="result-section" id="coverage-section">
+          <h2>Input Coverage</h2>
+          <p class="hint">Which classes of input you actually put through the app. A class you never tried is a set of bugs you had no way of seeing.</p>
+          <div id="coverage-list"></div>
         </div>
 
         <div class="result-section">

@@ -1,5 +1,6 @@
 let extractor = null;
 let bugEmbeddings = null;
+let titleEmbeddings = null;
 let activeBugs = null;
 
 // Load the sentence-transformer model and pre-embed bug descriptions
@@ -23,6 +24,16 @@ export async function loadModel(bugs, onProgress) {
   for (let i = 0; i < activeBugs.length; i++) {
     bugEmbeddings.push(output[i].data);
   }
+
+  // Titles are embedded as well. Cosine similarity punishes a length mismatch,
+  // so a terse report like "'re isn't recognized" scores far higher against a
+  // one-line title than against a forty-word matchText.
+  const titles = activeBugs.map(b => b.title);
+  const titleOut = await extractor(titles, { pooling: 'mean', normalize: true });
+  titleEmbeddings = [];
+  for (let i = 0; i < activeBugs.length; i++) {
+    titleEmbeddings.push(titleOut[i].data);
+  }
 }
 
 // Embed a single text and return its vector
@@ -39,7 +50,11 @@ function cosineSimilarity(a, b) {
 }
 
 // Match a list of user reports against all known bugs.
-export async function evaluateReports(reports, threshold = 0.55) {
+//
+// The threshold is lower than raw cosine intuition suggests: measured against
+// this bug list the correct entry usually ranks first while scoring 0.44–0.61,
+// so 0.55 rejected reports it had already ranked correctly.
+export async function evaluateReports(reports, threshold = 0.45) {
   const matchedBugIds = new Set();
   const reportDetails = [];
 
@@ -48,7 +63,11 @@ export async function evaluateReports(reports, threshold = 0.55) {
 
     const scores = bugEmbeddings.map((bugVec, i) => ({
       bug: activeBugs[i],
-      score: cosineSimilarity(reportVec, bugVec)
+      // Best of the long description and the short title.
+      score: Math.max(
+        cosineSimilarity(reportVec, bugVec),
+        cosineSimilarity(reportVec, titleEmbeddings[i])
+      )
     }));
 
     scores.sort((a, b) => b.score - a.score);
