@@ -6,6 +6,8 @@
 - input classification would do well classified to positive / negative tests of the application to encourage testing of actual usage flows over all the error handling an app could theoretically need.
 - Counting the number of bugs and hints towards bugs 
 - bug report style impact to matching - So we need a way to Go through the list of bugs and come up with alternative ways of describing the problem, maybe even a list of keywords that increase the matching chances so that it works also if our description is long and the reporter's description is short, and the other way around. 
+- teaching mode and evaluation mode - two different URLs so that in evaluation mode you don't get the hints. 
+- A switch between production and test database to be implemented by some mechanism 
 
 Bugs:
 - "The UI is ugly" => 51% match to responsive ui
