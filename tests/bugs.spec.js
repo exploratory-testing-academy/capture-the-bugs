@@ -57,6 +57,29 @@ test.describe('answer key still reproduces', () => {
     expect(r.html).toBe('<p></p><p>firstsecond</p>');
   });
 
+  // The counterpart to #63: one space before the same line break flips the
+  // count the other way, because the newline is then counted as a word itself.
+  // Both inputs describe "two words on two lines" and neither gives 2 for the
+  // right reason — which is why they are separate input classes.
+  test('#21 a space before the newline counts the break as a word', async ({ page }) => {
+    const r = await check(page, 'first \n second');
+    expect(r.words).toBe('3');                    // correct: 2
+    expect(r.html).toBe('<p>first </p><p> second</p>');
+
+    const glued = await check(page, 'first\nsecond');
+    expect(glued.words).toBe('1');                // correct: 2, and see #63
+  });
+
+  test('#20 blank lines emit empty paragraphs', async ({ page }) => {
+    const r = await check(page, '\n\nfirst second');
+    // Correct: one paragraph reading "first second", with no leading gap.
+    expect(r.html).toBe('<p></p><p></p><p>first second</p>');
+    // 2 is right only by accident here — the leading break is counted as a word
+    // and "first" is not. Put spaces on the blank line and the phantom shows:
+    const spaced = await check(page, '\n   \nfirst second');
+    expect(spaced.words).toBe('3');               // correct: 2
+  });
+
   test('#64 a typed HTML entity is decoded on output', async ({ page }) => {
     const r = await check(page, '&lt;is&gt;');
     // Correct: the text typed should come back as typed, "&lt;is&gt;".
