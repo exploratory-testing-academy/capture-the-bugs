@@ -48,6 +48,10 @@ function words(v) {
   return t.length === 0 ? [] : t.split(/\s+/);
 }
 
+function nonBlankLines(v) {
+  return v.split('\n').filter(l => l.trim().length > 0).length;
+}
+
 function countMatches(v, re) {
   return (v.match(re) || []).length;
 }
@@ -230,14 +234,47 @@ export const inputClasses = [
     sampleNote: 'A single newline, nothing else',
     detect: v => v.includes('\n') && v.trim().length === 0
   },
+  // Two shapes that look alike on screen and fail in opposite directions.
+  // Only a literal ' ' ever resets the counter's processingSpaces flag, and a
+  // newline is rewritten to '' before that comparison — so '' reads as "not a
+  // space". A break reached mid-word leaves the counter inside a word and the
+  // next word goes uncounted; a break reached just after a space is itself
+  // counted as a word start. Measured: "first\nsecond" → 1, "first \nsecond" →
+  // 2, "first \n second" → 3, all for two words. The 2 is right only by
+  // accident — the counted newline cancels the uncounted word — which is why
+  // the sample below puts a space on both sides and shows the 3. bugs.js keys
+  // these separately too (#11 vs #21), so one class covering both lets a tester
+  // read as done having probed neither.
   {
     id: 'newline with words',
-    label: 'Multiple lines of text',
-    why: 'Words split across lines — paragraph and word-boundary handling.',
+    label: 'Newline as the only separator between words',
+    why: 'A line break with no space beside it — the counter stays mid-word across the break, so what follows goes uncounted and runs together in the output.',
     example: '"first\\nsecond"',
     sample: 'first\nsecond',
-    detect: v =>
-      v.includes('\n') && v.split('\n').filter(l => l.trim().length > 0).length >= 2
+    detect: v => /[^ ]\n/.test(v) && nonBlankLines(v) >= 2
+  },
+  {
+    id: 'space before newline',
+    label: 'Space before a line break',
+    why: 'A line ending in a space before Enter — the break itself gets counted as a word, so the count is inflated rather than short, and the stray space shifts the output.',
+    example: '"first \\n second"',
+    sample: 'first \n second',
+    sampleNote: 'Note the space before the line break',
+    detect: v => / +\n/.test(v)
+  },
+  // A break on an empty line has no pending word to glue, so it surfaces in the
+  // output instead: every newline emits "</p><p>", so a blank line becomes an
+  // empty paragraph and a visible gap. Whitespace-only input is excluded — that
+  // is the 'newline' class above; this one needs real text for the blank line to
+  // sit before or between.
+  {
+    id: 'blank lines',
+    label: 'Blank lines before or between text',
+    why: 'A line with nothing on it — each blank line emits an empty paragraph into the output, and a leading break is counted as a word nobody typed.',
+    example: '"\\n\\nfirst second"',
+    sample: '\n\nfirst second',
+    sampleNote: 'Two blank lines before the text',
+    detect: v => v.trim().length > 0 && /^[ \t]*\n|\n[ \t]*\n/.test(v)
   },
   {
     id: 'long word',

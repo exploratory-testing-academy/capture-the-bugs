@@ -100,6 +100,34 @@ const CASES = [
     input: '   ',
     expect: ['spaces only'],
     reject: ['empty', 'newline']
+  },
+  // These two differ by one space and land on opposite word-count bugs, so
+  // neither may stand in for the other.
+  {
+    name: 'a bare newline between words is its own class',
+    input: 'first\nsecond',
+    expect: ['newline with words'],
+    reject: ['space before newline', 'newline', 'spaces only']
+  },
+  {
+    name: 'a space before the newline is its own class',
+    input: 'first \nsecond',
+    expect: ['space before newline'],
+    reject: ['newline with words', 'newline', 'spaces only']
+  },
+  {
+    name: 'a leading blank line is its own class',
+    input: '\nfirst second',
+    expect: ['blank lines'],
+    reject: ['newline with words', 'space before newline', 'newline', 'spaces only']
+  },
+  {
+    // Overlap on purpose: a blank line between words both swallows the second
+    // word and emits the empty paragraph, so it genuinely is both.
+    name: 'a blank line between words counts as both newline classes',
+    input: 'first\n\nsecond',
+    expect: ['blank lines', 'newline with words'],
+    reject: ['space before newline', 'newline', 'spaces only']
   }
 ];
 
