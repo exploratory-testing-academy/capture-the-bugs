@@ -5,9 +5,36 @@ the bugs you find, and get scored against a known bug list.
 
 **→ [exploratory-testing-academy.github.io/capture-the-bugs](https://exploratory-testing-academy.github.io/capture-the-bugs/)**
 
-Everything runs in your browser. An embedding model (`all-MiniLM-L6-v2`, ~30 MB,
-downloaded once) matches your free-text reports against the bug list, so no
-session data leaves your machine.
+An embedding model (`all-MiniLM-L6-v2`, ~30 MB, downloaded once) matches your
+free-text reports against the bug list in your browser, so the scoring itself
+happens on your machine.
+
+## Recording
+
+**Sessions are recorded.** The inputs you try, the findings you write and what
+the evaluator made of them are saved to a Supabase database, so the exercise can
+be studied and improved.
+
+There is no name, login, e-mail or cohort token anywhere in this. A session
+carries a random code like `keen-ember-2407`, shown while you work and again on
+your results. Share it if you want your session looked at; keep it and nothing
+connects the session to you. The code is per attempt: start over and you get a
+new one. Your browser keeps a list of the codes it has produced so you can hand
+over several if you like, and that list is never sent.
+
+Worth being straight about: the *content* can identify even though the fields
+don't. Findings are free prose, and people type all sorts of things into a text
+box to see what happens.
+
+`?record=off` disables recording for a run, and it is off automatically in
+automated browsers so test runs stay out of the data.
+
+The schema is one append-only table. The browser holds a publishable key whose
+only privilege is `INSERT`, so a page cannot read, edit or delete any session —
+which is why nothing session-level is stored as mutable state and
+`session_summary` derives it in SQL instead. Apply
+`supabase/migrations/20260805120000_recording.sql` with `supabase db push`, or
+paste it into the SQL editor.
 
 ## How a session goes
 

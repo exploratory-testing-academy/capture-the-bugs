@@ -4,6 +4,10 @@ import {
   isCapturing
 } from './capture.js';
 import { computeCoverage, classifyValue } from './coverage.js';
+import {
+  startSession, endSession, noteReset, noteEvaluation, currentCode,
+  isRecording, localSessionLog, flushNow
+} from './record.js';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let findings = [];
@@ -84,6 +88,15 @@ async function startTarget(meta) {
   startCapture(frame, meta.id);
   frame.src = meta.appPath;
   document.getElementById('target-popout').href = meta.appPath;
+
+  // Recording starts with the session, not with the first input, so an attempt
+  // that produces nothing is still visible as an attempt.
+  startSession(meta.id, {
+    getInputs: getCapturedInputs,
+    getFindings: () => findings,
+    getHintLevel: () => hintLevel
+  });
+  renderSessionCode();
 
   // Refresh the live strip as inputs land, plus once now for restored state.
   onCapture(renderLiveCoverage);
@@ -351,6 +364,9 @@ hintSelect.addEventListener('change', () => {
 // session. This is the explicit way to start counting from zero again.
 document.getElementById('cov-reset').addEventListener('click', () => {
   if (getCapturedInputs().length === 0) return;
+  // Record what is about to be discarded before discarding it: how often someone
+  // recounts from zero is itself worth knowing.
+  noteReset();
   clearCapturedInputs();
   renderLiveCoverage();
 });
@@ -497,6 +513,69 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// ── Session code ─────────────────────────────────────────────────────────────
+// The only thing tying a recorded session to the person who ran it, and only if
+// they choose to pass it on. Shown while exploring and again on the results,
+// which is when someone decides whether to share it.
+
+function wireCopy(btn, getText) {
+  btn.addEventListener('click', async () => {
+    const text = getText();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = 'Copied';
+    } catch {
+      btn.textContent = 'Copy failed';
+    }
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+  });
+}
+
+function renderSessionCode() {
+  const bar = document.getElementById('session-bar');
+  const code = currentCode();
+  // Nothing to show when recording is off: no code exists to share.
+  bar.style.display = isRecording() && code ? 'flex' : 'none';
+  if (code) document.getElementById('session-code').textContent = code;
+}
+
+function renderSessionResults() {
+  const section = document.getElementById('session-section');
+  const code = currentCode();
+  section.style.display = isRecording() && code ? 'block' : 'none';
+  if (!code) return;
+
+  document.getElementById('results-session-code').textContent = code;
+
+  // Earlier codes from this browser, so someone who restarted can hand over the
+  // whole picture. This list is local; the database never links the attempts.
+  const past = localSessionLog().filter(e => e.code !== code);
+  const el = document.getElementById('past-sessions');
+  el.innerHTML = '';
+  if (past.length === 0) return;
+
+  const p = document.createElement('p');
+  p.className = 'hint';
+  p.textContent = 'Earlier sessions from this browser:';
+  el.appendChild(p);
+  for (const entry of past) {
+    const row = document.createElement('div');
+    row.className = 'past-session';
+    const c = document.createElement('code');
+    c.textContent = entry.code;
+    row.appendChild(c);
+    const when = document.createElement('span');
+    when.className = 'past-session-when';
+    when.textContent = `${entry.target_id} · ${new Date(entry.at).toLocaleString()}`;
+    row.appendChild(when);
+    el.appendChild(row);
+  }
+}
+
+wireCopy(document.getElementById('session-copy'), currentCode);
+wireCopy(document.getElementById('results-session-copy'), currentCode);
+
 // ── Evaluation flow ──────────────────────────────────────────────────────────
 async function runEvaluation() {
   showView('results');
@@ -524,6 +603,9 @@ async function runEvaluation() {
     scorecard.style.display = 'block';
     restartBtn.style.display = 'inline-block';
     renderResults(results);
+
+    noteEvaluation(results, computeCoverage(target.inputClasses, getCapturedInputs()));
+    renderSessionResults();
   } catch (err) {
     loadingText.textContent = `Error: ${err.message}. Try refreshing the page.`;
     console.error(err);
@@ -543,6 +625,8 @@ evaluateBtn.addEventListener('click', () => {
 });
 
 restartBtn.addEventListener('click', () => {
+  // Closes the session out: the next target entry mints a fresh code.
+  endSession();
   findings = [];
   saveFindingsToStorage();
   clearCapturedInputs();
@@ -578,9 +662,53 @@ window.__ctb = {
 
   // Discard captured inputs for the current target and recount from zero.
   reset() {
+    noteReset();
     clearCapturedInputs();
     renderLiveCoverage();
     return 'Captured inputs cleared.';
+  },
+
+  // ── Recording ──────────────────────────────────────────────────────────────
+
+  // The session code, whether recording is live, and every code this browser has
+  // produced. That log is local: nothing server-side links the attempts.
+  session: () => ({
+    code: currentCode(),
+    recording: isRecording(),
+    log: localSessionLog()
+  }),
+
+  flushRecording: () => flushNow(),
+
+  // Ends the attempt the way Start Over does, without going through the results.
+  endSession() {
+    endSession();
+    return 'Session closed.';
+  },
+
+  // Records an evaluation using the target's own answer key, skipping the model
+  // download — companion to previewCoverage, and the same trade: this exercises
+  // the results-to-payload mapping, not the matching that produces the results.
+  previewEvaluation() {
+    if (!target) return 'Pick a target first.';
+    showView('results');
+    loading.style.display = 'none';
+    scorecard.style.display = 'block';
+    const matchedBugs = target.bugs.slice(0, 2);
+    const results = {
+      matchedBugs,
+      missedBugs: target.bugs.slice(2),
+      reportDetails: findings.filter(f => f.trim().length > 0).map(f => ({
+        report: f,
+        topMatch: { bug: target.bugs[0], score: 0.7123 }
+      })),
+      earnedPoints: matchedBugs.reduce((sum, b) => sum + b.points, 0),
+      matchedCount: matchedBugs.length,
+      totalCount: target.bugs.length
+    };
+    noteEvaluation(results, computeCoverage(target.inputClasses, getCapturedInputs()));
+    renderSessionResults();
+    return results;
   },
 
   // Renders just the coverage block, skipping the model download. Dev aid for
