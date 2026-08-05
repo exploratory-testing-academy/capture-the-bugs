@@ -158,6 +158,22 @@ test.describe('copy buttons', () => {
       .toBe('is\u200Bbeing\uFEFF here');
   });
 
+  // The three newline samples differ from each other only in where a space or a
+  // blank line sits, so a trim anywhere in the copy path would quietly collapse
+  // them back into one class — the very bug the split fixed.
+  test('copies the newline samples with their whitespace intact', async ({ page }) => {
+    const cases = [
+      ['Newline as the only separator', 'first\nsecond'],
+      ['Space before a line break', 'first \n second'],
+      ['Blank lines before or between text', '\n\nfirst second']
+    ];
+
+    for (const [label, expected] of cases) {
+      await rowFor(page, label).locator('button.cov-copy').click();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    }
+  });
+
   test('a copied sample actually covers the class it belongs to', async ({ page }) => {
     // The point of the samples: paste one in and the class must register.
     await rowFor(page, 'Digits touching letters').locator('button.cov-copy').click();

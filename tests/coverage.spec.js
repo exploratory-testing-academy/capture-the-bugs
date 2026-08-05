@@ -172,6 +172,33 @@ test.describe('input class coverage', () => {
     expect(cov.typedOnly).not.toContain("contraction -'re");
   });
 
+  // The general form of the bug that split the newline class: two detectors that
+  // fire on exactly the same inputs. That is not a naming quibble — it means a
+  // tester probing one risk silently reads as having probed the other. Checked
+  // against each class's own sample, since that is what the checklist hands out.
+  // 'file' and 'bible' carry a note instead of a sample and are skipped.
+  test('no two classes are indistinguishable by their samples', async ({ page }) => {
+    const classes = await page.evaluate(() =>
+      window.__ctb.coverage().classResults
+        .filter(c => c.sample !== undefined)
+        .map(c => ({ id: c.id, signature: window.__ctb.classify(c.sample) }))
+    );
+    expect(classes.length).toBeGreaterThan(30);
+
+    // A sample that does not register its own class is a broken sample.
+    for (const c of classes) expect(c.signature).toContain(c.id);
+
+    const bySignature = new Map();
+    for (const c of classes) {
+      const key = [...c.signature].sort().join(' + ');
+      bySignature.set(key, [...(bySignature.get(key) || []), c.id]);
+    }
+    const collisions = [...bySignature.entries()]
+      .filter(([, ids]) => ids.length > 1)
+      .map(([key, ids]) => `${ids.join(' / ')} both classify as: ${key}`);
+    expect(collisions).toEqual([]);
+  });
+
   test('percent tracks covered over total', async ({ page }) => {
     await submitInput(page, 'nothing');
     const cov = await coverage(page);
