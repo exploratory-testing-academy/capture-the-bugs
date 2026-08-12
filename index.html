@@ -23,12 +23,8 @@
           <li>When you think you've found everything, submit for evaluation</li>
         </ol>
         <p>An AI model running in your browser will match your reports against the known bug list and score your session, so the scoring itself happens on your machine.</p>
-        <p class="notice"><strong>Sessions are recorded.</strong> The inputs you try and
-          the findings you write are saved to a database so this exercise can be studied
-          and improved. There is no name, login or e-mail involved &mdash; your session
-          carries only a random code, shown while you work. Share that code if you want
-          your session looked at; keep it to yourself and nobody can connect the session
-          to you.</p>
+        <p class="notice">Recorded without your name. Share your session name if you want it
+          reviewed.</p>
       </div>
 
       <h2>Choose a target</h2>
@@ -58,9 +54,9 @@
             <span class="session-bar-label">Session</span>
             <code id="session-code">&mdash;</code>
             <button id="session-copy" class="btn btn-small" type="button"
-              title="Copy this session code">Copy</button>
-            <span class="session-bar-note">Recorded without your name. Share this code
-              if you want your session reviewed.</span>
+              title="Copy your session name">Copy</button>
+            <span class="session-bar-note">Recorded without your name. Share your session name
+              if you want it reviewed.</span>
           </div>
 
           <div id="coverage-live" class="coverage-live">
@@ -146,14 +142,13 @@
         </div>
 
         <div class="result-section" id="session-section" style="display:none">
-          <h2>Your Session Code</h2>
-          <p class="hint">This session was recorded with no name attached to it. Share the
-            code if you would like someone to look at how you worked; keep it and the
-            session stays unconnected to you.</p>
+          <h2>Your Session Name</h2>
+          <p class="hint">Recorded without your name. Share your session name if you want
+            it reviewed.</p>
           <div class="session-bar">
             <code id="results-session-code">&mdash;</code>
             <button id="results-session-copy" class="btn btn-small" type="button"
-              title="Copy this session code">Copy</button>
+              title="Copy your session name">Copy</button>
           </div>
           <div id="past-sessions" class="past-sessions"></div>
         </div>

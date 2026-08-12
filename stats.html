@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture the Bugs &mdash; Session Stats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Stats View ───────────────────────────────────────────── -->
+    <section id="stats" class="view active">
+      <h1>Session Stats</h1>
+      <p class="subtitle">Every recorded session, and what testers did with them</p>
+
+      <div id="stats-loading" class="loading">
+        <div class="spinner"></div>
+        <p id="stats-loading-text">Reading sessions&hellip;</p>
+      </div>
+
+      <p id="stats-error" class="notice" style="display:none"></p>
+
+      <div id="stats-body" style="display:none">
+        <div class="score-summary card">
+          <div class="score-row">
+            <div class="score-block">
+              <div class="score-big" id="stat-sessions">0</div>
+              <div class="score-label">sessions</div>
+            </div>
+            <div class="score-block">
+              <div class="score-big" id="stat-submitted">0%</div>
+              <div class="score-label">submitted for scoring</div>
+            </div>
+            <div class="score-block">
+              <div class="score-big" id="stat-findings">0</div>
+              <div class="score-label">findings written, on average</div>
+            </div>
+            <div class="score-block">
+              <div class="score-big" id="stat-matched">0</div>
+              <div class="score-label">of <span id="stat-total-bugs">0</span> bugs matched</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <h2>Which Bugs Get Found</h2>
+          <p class="hint">Share of scored sessions that matched each bug, hardest first. A
+            bug nobody ever matches is either genuinely invisible or described in the
+            answer key in words no tester would reach for.</p>
+          <div id="bug-stats"></div>
+        </div>
+
+        <div class="result-section">
+          <h2>Which Input Classes Get Tried</h2>
+          <p class="hint">Share of scored sessions that put each class of input through the
+            app. Only classes actually submitted count &mdash; a class typed but never
+            committed is not recorded, so this cannot tell the two apart.</p>
+          <div id="class-stats"></div>
+        </div>
+
+        <div class="result-section">
+          <h2>Sessions</h2>
+          <p class="hint">Newest first. Expand one to read the findings as they were
+            written.</p>
+          <div id="session-stats"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script type="module" src="js/stats.js"></script>
+</body>
+</html>

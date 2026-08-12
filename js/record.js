@@ -18,8 +18,10 @@
 //   is bounded.
 
 const SUPABASE_URL = 'https://ilzxtnnulegilgkjnhli.supabase.co';
-// Publishable ("anon") key: public by design and safe in client source, because
-// RLS gives it INSERT on one table and no way to read anything back.
+// Publishable ("anon") key: public by design and safe in client source. RLS
+// gives it INSERT on public.events, and SELECT on the redacted _public views
+// that stats.js reads — never on the base table, so no row can be edited or
+// deleted and the fingerprint fields below cannot be read back out.
 const SUPABASE_KEY = 'sb_publishable_0KnLRfm7L1aRwo6f-YWDLg_mYKKXyDJ';
 const ENDPOINT = `${SUPABASE_URL}/rest/v1/events`;
 

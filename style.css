@@ -27,9 +27,10 @@ body {
   display: block;
 }
 
-/* Welcome & results views get normal centered layout */
+/* Welcome, results & stats views get normal centered layout */
 #welcome,
-#results {
+#results,
+#stats {
   max-width: 720px;
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -674,6 +675,44 @@ h2 {
 .past-session-when {
   color: #888;
   font-size: 0.72rem;
+}
+
+/* ── Stats page ────────────────────────────────────────────────────────────── */
+/* The rate rows reuse .bug-item, so these only add the two things a rate row
+   has that a bug row does not: a bar sized to sit inline, and the figure. */
+.stat-bar {
+  width: 120px;
+  flex-shrink: 0;
+}
+.stat-rate {
+  min-width: 4.5rem;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+/* Never-found reads as a finding in its own right, not as a zero. */
+.stat-zero {
+  color: #991b1b;
+}
+#session-stats .cov-value {
+  white-space: pre-wrap;
+  margin-bottom: 0.4rem;
+}
+/* The verdict sits under the thing it judges, tucked close enough to read as
+   attached to it rather than as the next item. */
+.stat-interp {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #555;
+  margin: -0.2rem 0 0.7rem;
+}
+.stat-empty {
+  color: #888;
+  font-style: italic;
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────────── */
