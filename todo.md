@@ -14,5 +14,11 @@ Bugs:
 - "The UI is ugly" => 51% match to responsive ui
 - ~~"test \ntest and test\ntest are considered same category but they address different risk and find different problem~~ — split into three input classes: newline-as-separator, space-before-newline, blank-lines
 
+I found 2 instances for the fun of it:
+1. If you type the same findings 1x then 2x times, you get extra score.
+2. The model is too small and it is built around semantic search, so that means it also matches more than it should.
 
+Examples for:
+1. `There is no problem with the word count` -> This matches 5 points, when it shouldn't. But at this string 2 times as 2 findings and it matches 6 points. So this catches bugs #10,#11,#12,#13,#14 + #62 on the second finding
+2. And the other is if you add this as 1 word per finding (18) you get 51% coverage: apostrophe, separated words, violations, contrast, whitespace, validation, decoded, quotes, context, possessive, newlines, font, ctrl, textarea, disabled, txt, digit, links open
 
