@@ -1,0 +1,104 @@
+A. E‑Prime detection — violations it misses (false negatives)
+
+  1. 're contractions of "are" are never detected. you're / we're / they're → 0 discouraged, 0 possible. Confirmed (also visible in the sample sentence: "we're worried" left unmarked).
+  2. 's = "is" contractions are only "Possible Violations", not "Discouraged". it's, that's, there's, here's, what's, who's render blue, lumped with possessives — yet isn't/aren't are hard red
+     violations. it's = "it is" is unambiguous; the severity split is inconsistent.
+  3. Curly/typographic apostrophe (’, U+2019) defeats all contraction rules. isn't, I'm, aren't, wasn't with a smart quote → 0 flagged. Word and Google Docs emit these by default, so real pasted prose
+     slips through. Confirmed.
+  4. A newline touching a "to be" word hides it. The cat is\nblack → the tokens merge to isblack and "is" is not flagged. Confirmed.
+  5. Two "to be" words separated only by a newline are both lost. is is is\nis is is → detects 4 of 6 "is". Silent data loss. Confirmed.
+  6. Root cause: after a \n is blanked, validChars.indexOf('') returns 0, so the newline counts as a valid word character and never flushes the current word. Any newline corrupts the words on either side
+     of it.
+  7. Quoting a word hides the violation. He said 'is' loudly → "is" not flagged, because ' is a "valid" char so the token is 'is'. Confirmed.
+  8. Tokenisation is self‑contradictory. Digits split words (was2020 → "was" flagged, "2020" split off) but newlines/tabs do not split words. Two different rules for "what ends a word."
+  9. "is\n" × 200 → Word Count 1, Discouraged 0. 200 violations, none detected, all collapsed into one 800‑char token. Total failure on multi‑line input. Confirmed.
+
+  B. E‑Prime detection — false positives / miscategorisation
+
+  10. Plain possessives flagged as Possible Violations: the dog's bone, John's car, DOG'S. Possessive 's is not an E‑Prime issue. Confirmed.
+  11. let's (= "let us") flagged as a possible violation — not a "to be" form at all. Confirmed.
+  12. Acronyms false‑positive: AM radio, IS, BE, WAS as initialisms are always flagged as the verb. Confirmed (AM radio → flagged).
+  13. Hyphenated standard words trip it: well-being → "being" flagged; same for e-mail, to-day. Splits on - with no whitelist. Confirmed.
+  14. Underscores split words: was_here → "was" flagged, _here left dangling. Code/identifiers get mangled. Confirmed.
+  15. No legend. Nothing on the page explains red vs blue, so a user can't tell why that's is blue but is is red.
+
+  C. Word Count
+
+  16. Newline is not a word separator. one two\nthree four → Word Count 3 (should be 4); "two"/"three" merge. Confirmed.
+  17. Tab is not a word separator. is\twas\tare → Word Count 1, even though all three words are individually highlighted — the count directly contradicts the output. Confirmed.
+  18. Only the ASCII space 0x20 is treated as whitespace. Tab, newline, CR, NBSP are all ignored for counting.
+  19. Digit/punctuation runs with no surrounding space aren't counted consistently: abc123def → 1 word but two rendered tokens.
+  20. Counts never reconcile with highlights. There's no way for a tester to verify "Discouraged Words: 4" against 4 red spans when merges (bug 5) desync them.
+
+  D. Output rendering & escaping
+
+  21. & is never escaped (convertToHTMLIfRequired only handles </>), and output goes through innerHTML. &amp; → shows &; &lt;b&gt; → shows <b>; &#98;e → renders as be — which the tool then flags. Input
+      is not echoed faithfully. Confirmed.
+  22. " and ' also unescaped in the output path — safe today only because word tokens can't contain <; fragile.
+  23. Consecutive newlines emit stacked empty paragraphs. a\n\n\nb → <p></p><p></p><p></p><p>ab</p>. Confirmed.
+  24. Leading newline → empty first paragraph. Confirmed.
+  25. Long output overflows horizontally off-page with no wrap and no scrollbar — text past the right edge is simply unreadable/lost ("is\n"×200 case). Confirmed.
+  26. Results panel renders ABOVE the textarea, with the "Text:" label wedged between results and input. You see output before typing; reading order is backwards. Confirmed.
+  27. Stat values are blank on load (Word Count: with nothing after) instead of 0; populate only after first click. Confirmed.
+  28. No reset: emptying the textarea and re‑checking leaves the gray results box sitting there with an empty <p>.
+
+  E. CSS / layout
+
+  29. .page { position: fixed } — the whole document cannot scroll. On a 900×500 window the textarea is clipped and the "Check For E‑Prime" button is entirely off‑screen and unreachable — Playwright
+      itself times out trying to click it ("element is outside of the viewport", scroll does nothing). This breaks the app on any short window / larger system font. Confirmed.
+  30. .page { width: 600px } fixed pixels, no responsiveness; with left: 10% content can be pushed off the right edge on narrow screens and floats with a huge right gutter on wide ones. Confirmed.
+  31. h1 { font-size: 60 } — missing unit → invalid → ignored. Heading never gets its intended size (computed 32px). Confirmed.
+  32. html { font-size: 20 } — missing unit → invalid → ignored (computed 16px). Confirmed.
+  33. html { font-family: 'Lato', cursive } — fallback is cursive. If the web font fails, all body text renders in a cursive face. Should be sans-serif.
+  34. Contrast: .eprime_text background gray with .ep_violation red and .ep_warning blue text fails WCAG AA — blue-on-gray is close to unreadable. Confirmed visually.
+  35. .eprime_text margins left: 4% / right: 20% — arbitrary and asymmetric; wastes width while long content still overflows.
+  36. Google Fonts <link> is render-blocking, no display=swap, no fallback metrics → FOIT / layout shift.
+  37. No :focus styles anywhere.
+  38. Leftover empty style="" on the <textarea>, and its cols="60" fights the CSS width.
+
+  F. Accessibility
+
+  39. Banner <img> has no alt. Confirmed (img.alt === "").
+  40. The banner is a screenshot of an "Apache License 2.0" summary table — unreadable tiny text, informational content delivered as an unlabelled image, unrelated to what the app does.
+  41. width="100%" with no height on the banner → cumulative layout shift on load.
+  42. Results region has no aria-live — screen readers get no announcement when the analysis updates.
+  43. Colour is the only signal for results (no underline/icon/text) — fails "don't rely on colour alone."
+  44. <button type="submit"> with onclick and no <form> — wrong semantics; no Enter-to-submit from the textarea; nothing works without JS.
+  45. GitHub attribution link has no rel, opens in the same tab (you lose the app); the Wikipedia link uses target="_blank" without rel="noopener". Confirmed.
+
+  G. HTML / head / metadata
+
+  46. No <meta name="viewport"> — not mobile-optimised. Confirmed.
+  47. No <meta charset> in the document (only the HTTP header carries it) — breaks if the file is re-hosted or opened locally. Confirmed.
+  48. No <meta name="description">, no Open Graph tags.
+  49. favicon.ico → 404 on every load. Confirmed.
+  50. Product name is spelled two ways: <title> says "Eprimer", <h1> says "E‑Primer". Confirmed.
+  51. <h1> "E‑Primer an e‑prime checking tool" is missing punctuation — run-on; should be "E‑Primer, an e‑prime checking tool".
+  52. <script src="eprime.js"> in <head> with no defer/async — render-blocking.
+  53. <code> used for a plain attribution sentence — wrong element, renders monospace for no reason.
+  54. <html lang="en"> is fine, but there's no lang-consistent handling of the smart-quote input it can't parse (see A3).
+
+  H. Code quality / robustness (drives the bugs above)
+
+  55. discouragedWords (15-entry array) is rebuilt on every single word of every check — hundreds of allocations per paragraph.
+  56. new Array() used as a hash map for both word lists — keys collide with Array.prototype members; works today by luck.
+  57. Parser state is module-level vars (wordCount, outputText, currChar, …), only reset inside one function — any other script or a console user can clobber it.
+  58. outputText = outputText + … in a char loop — O(n²) string building; large pastes get slow.
+  59. isApostropheEprime uses substr(firstApostrophe) — multi-apostrophe tokens (y'all's, rock'n'roll) are judged on the wrong segment.
+  60. convertToHTMLIfRequired is only reachable from the "invalid char" branch — it can never sanitise a character that lands in the word path, so the escaping doesn't actually compose with the part that
+      uses innerHTML.
+  61. Word list is curated backwards: it includes rare amn't / ain't but omits everyday he's, she's, there's as hard violations, and omits 're entirely.
+  62. Trailing whitespace makes a spurious empty final <p> and can strand a word alone in its own paragraph (the cat is here\n → "here" isolated). Confirmed.
+  63. No max-length / paste guard — "is\n"×200 already yields a broken 800-char token and off-screen overflow.
+  64. No auto-check on input / no debounce — you must click every time, and per bug 29 the button may not be clickable.
+  65. No sentence or paragraph metrics, and no indication of which rule fired for a given highlight, so results can't be audited against the input.
+
+  ---
+
+  Highest-impact (fix first)
+
+  - #29 page can't scroll → button unreachable on short windows (app becomes unusable).
+  - #4/#5/#6/#9 newline handling silently loses violations and breaks the word count — the core function is wrong on any multi-line text.
+  - #3 smart apostrophes defeat detection on realistic pasted prose.
+  - #2/#10 the "Discouraged vs Possible" split miscategorises "is"-contractions and flags plain possessives.
+  - #21 &/entity handling means the tool misrepresents its own input.
