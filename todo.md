@@ -1,9 +1,9 @@
 # Collecting some ideas of what could be in here
 
+- input coverage and results coverage
 - session stats: today and all time
 - A switch between production and test database to be implemented by some mechanism 
 - input classification would do well classified to positive / negative tests of the application to encourage testing of actual usage flows over all the error handling an app could theoretically need.
-- Decide what to do about the bug with the link not working to the eviltester github. We need to either fix it or add it to the list of bugs. 
 - Time tracking: how long we thing coverage takes vs. how long the person took to do the assignment, and whether their results were following the "in the time used, most important testing got done" -heuristic
 - ask for tip on classes of inputs / results, and track tips needed - to make it less one off on being done. 
 - add possibility for input: test strategy, requirements, test cases as possibility to see how those change people's results
@@ -13,7 +13,6 @@
 
 Bugs:
 - "The UI is ugly" => 51% match to responsive ui
-- ~~"test \ntest and test\ntest are considered same category but they address different risk and find different problem~~ — split into three input classes: newline-as-separator, space-before-newline, blank-lines
 
 I found 2 instances for the fun of it:
 1. If you type the same findings 1x then 2x times, you get extra score.

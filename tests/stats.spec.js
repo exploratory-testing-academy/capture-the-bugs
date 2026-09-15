@@ -90,18 +90,18 @@ test('summarises every recorded session', async ({ page }) => {
   // 0 must not be counted twice.
   await expect(page.locator('#stat-findings')).toHaveText('1.5');
   await expect(page.locator('#stat-matched')).toHaveText('2.0');
-  await expect(page.locator('#stat-total-bugs')).toHaveText('65');
+  await expect(page.locator('#stat-total-bugs')).toHaveText('63');
 });
 
 test('rates every bug against the sessions that were scored', async ({ page }) => {
   await openStats(page);
 
   const rows = page.locator('#bug-stats .bug-item');
-  await expect(rows).toHaveCount(65);
+  await expect(rows).toHaveCount(63);
 
   // Two bugs matched by the one scored session; the rest by nobody. Rows sort
   // hardest-first, so the never-found ones lead.
-  await expect(page.locator('#bug-stats .stat-zero')).toHaveCount(63);
+  await expect(page.locator('#bug-stats .stat-zero')).toHaveCount(61);
   await expect(rows.first().locator('.stat-rate')).toHaveText('never');
   await expect(rows.last().locator('.stat-rate')).toHaveText('100% (1)');
 });

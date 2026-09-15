@@ -311,15 +311,6 @@ export const bugs = [
     difficulty: 3,
     points: 15
   },
-  {
-    id: 49,
-    title: "Links open inconsistently",
-    category: "Navigation",
-    inputTriggerable: false,
-    matchText: "Some links on the page open in a new window or tab while others open in the same window. The links behave inconsistently. Clicking different links gives different navigation behavior, some replace the page and some open new tabs.",
-    difficulty: 2,
-    points: 10
-  },
 
   // ─── Observation / Inspection ──────────────────────────────────────────────
   {
@@ -492,15 +483,6 @@ export const bugs = [
     matchText: "The URL structure of the application reveals or allows access to the source code files. You can navigate directly to the JavaScript file in the browser. The code is exposed and accessible through predictable URL paths.",
     difficulty: 2,
     points: 10
-  },
-  {
-    id: 51,
-    title: "External link missing security attributes",
-    category: "Security",
-    inputTriggerable: false,
-    matchText: "Links that open in a new tab or window are missing noopener or noreferrer security attributes. The target blank link does not have proper rel attributes to prevent security issues like reverse tabnapping.",
-    difficulty: 3,
-    points: 15
   },
   {
     id: 52,
