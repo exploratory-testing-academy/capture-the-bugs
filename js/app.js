@@ -108,6 +108,7 @@ async function startTarget(meta) {
   // Attach before setting src so the target's first load is observed.
   startCapture(frame, meta.id);
   frame.src = meta.appPath;
+  document.getElementById('target-popout').href = meta.appPath;
 
   // Recording starts with the session, not with the first input, so an attempt
   // that produces nothing is still visible as an attempt.

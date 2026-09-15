@@ -137,4 +137,16 @@ test.describe('input capture', () => {
 
     expect(instrumented).toEqual(standalone);
   });
+
+  // Some bugs (viewport meta, zoom, real browser chrome) only show up outside
+  // an iframe, so the pop-out link is the escape hatch for those — at the
+  // known cost that inputs tried there go unrecorded (capture.js only
+  // instruments the iframe, not a separate tab).
+  test('offers a pop-out link to the same target outside the iframe', async ({ page }) => {
+    const popout = page.locator('#target-popout');
+    await expect(popout).toBeVisible();
+    await expect(popout).toHaveAttribute('href', /targets\/eprimer\/app\/index\.html$/);
+    await expect(popout).toHaveAttribute('target', '_blank');
+    await expect(popout).toHaveAttribute('rel', 'noopener');
+  });
 });
