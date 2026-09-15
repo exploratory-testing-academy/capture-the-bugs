@@ -128,6 +128,34 @@ test('shows a today-specific empty state when nothing happened today', async ({ 
 
   await expect(page.locator('#stat-sessions')).toHaveText('0');
   await expect(page.locator('#session-stats .empty-state')).toHaveText('No sessions today.');
+  await expect(page.locator('#hint-stats .empty-state')).toHaveText('No sessions today.');
+});
+
+test('breaks down results by the hint level in effect', async ({ page }) => {
+  await openStats(page);
+
+  const rows = page.locator('#hint-stats .hint-level-row');
+  // Only the two levels present in the fixture data — 'off' and 'detail' —
+  // get a row, ordered off, count, detail, all rather than by appearance.
+  await expect(rows).toHaveCount(2);
+
+  const off = rows.first();
+  await expect(off.locator('.hint-level-name')).toHaveText('Off');
+  const offStats = off.locator('.hint-stat');
+  await expect(offStats.nth(0)).toContainText('1');
+  await expect(offStats.nth(0)).toContainText('sessions');
+  await expect(offStats.nth(1)).toContainText('100%');
+  await expect(offStats.nth(2)).toContainText('2.0');
+  await expect(offStats.nth(3)).toContainText('2.0');
+  await expect(offStats.nth(4)).toContainText('11%');
+
+  const detail = rows.nth(1);
+  await expect(detail.locator('.hint-level-name')).toHaveText('Detail');
+  const detailStats = detail.locator('.hint-stat');
+  await expect(detailStats.nth(1)).toContainText('0%');
+  // Never submitted, so the scored-only averages have nothing to average.
+  await expect(detailStats.nth(3)).toContainText('—');
+  await expect(detailStats.nth(4)).toContainText('—');
 });
 
 test('rates every bug against the sessions that were scored', async ({ page }) => {
@@ -330,4 +358,5 @@ test('copes with no sessions at all', async ({ page }) => {
   // With no target in the data there is no answer key to rate against.
   await expect(page.locator('#session-stats .empty-state')).toHaveText('Nothing recorded yet.');
   await expect(page.locator('#bug-stats .empty-state')).toBeVisible();
+  await expect(page.locator('#hint-stats .empty-state')).toHaveText('Nothing recorded yet.');
 });

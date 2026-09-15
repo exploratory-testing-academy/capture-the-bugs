@@ -392,6 +392,84 @@ function sessionRow(s, bugsById) {
   return wrap;
 }
 
+// Mirrors HINT_LEVELS in app.js — kept as a literal here rather than imported,
+// since stats.js reads recorded data and has no reason to depend on the
+// exercise UI module. 'unknown' covers a session whose session_start event
+// never landed (recording started mid-load, or an old row from before this
+// field existed) and is always sorted last rather than dropped, so a gap in
+// the data is visible instead of silently shrinking the totals.
+const HINT_LEVEL_ORDER = ['off', 'count', 'detail', 'all', 'unknown'];
+const HINT_LEVEL_LABELS = {
+  off: 'Off', count: 'Count only', detail: 'Detail', all: 'Full checklist', unknown: 'Unknown'
+};
+
+function average(nums) {
+  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+}
+
+function hintLevelGroups(sessions) {
+  const groups = new Map();
+  for (const s of sessions) {
+    const key = HINT_LEVEL_LABELS[s.hint_level] ? s.hint_level : 'unknown';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+  return HINT_LEVEL_ORDER
+    .filter(level => groups.has(level))
+    .map(level => [level, groups.get(level)]);
+}
+
+// The same shape as the headline scorecard, computed per hint level instead
+// of across every session, so "did hints correlate with better results" is
+// answerable at a glance rather than by mentally re-deriving it from raw rows.
+function hintLevelStats(sessions) {
+  const scored = sessions.filter(s => s.submitted);
+  return {
+    n: sessions.length,
+    submittedRate: sessions.length ? scored.length / sessions.length : null,
+    avgFindings: average(sessions.map(s => s.findings.length)),
+    avgMatched: scored.length ? average(scored.map(s => Number(s.best_matched || 0))) : null,
+    avgCoverage: scored.length ? average(scored.map(s => Number(s.coverage_percent || 0))) : null
+  };
+}
+
+function statPair(value, label) {
+  const block = document.createElement('div');
+  block.className = 'hint-stat';
+  const big = document.createElement('div');
+  big.className = 'hint-stat-value';
+  big.textContent = value;
+  const lbl = document.createElement('div');
+  lbl.className = 'hint-stat-label';
+  lbl.textContent = label;
+  block.append(big, lbl);
+  return block;
+}
+
+function hintLevelRow(level, sessions) {
+  const stats = hintLevelStats(sessions);
+  const row = document.createElement('div');
+  row.className = 'hint-level-row';
+
+  const name = document.createElement('div');
+  name.className = 'hint-level-name';
+  name.textContent = HINT_LEVEL_LABELS[level];
+  row.appendChild(name);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'hint-level-stats';
+  wrap.append(
+    statPair(String(stats.n), 'sessions'),
+    statPair(stats.submittedRate == null ? '—' : pct(stats.submittedRate), 'submitted'),
+    statPair(stats.avgFindings == null ? '—' : stats.avgFindings.toFixed(1), 'findings, avg'),
+    statPair(stats.avgMatched == null ? '—' : stats.avgMatched.toFixed(1), 'bugs matched, avg'),
+    statPair(stats.avgCoverage == null ? '—' : `${Math.round(stats.avgCoverage)}%`, 'coverage, avg')
+  );
+  row.appendChild(wrap);
+
+  return row;
+}
+
 function renderInto(container, rows, emptyText = 'Nothing recorded yet.') {
   container.replaceChildren();
   if (rows.length === 0) {
@@ -446,6 +524,11 @@ export function render(sessions, keysByTarget) {
 
   renderInto(document.getElementById('bug-stats'), bugRows);
   renderInto(document.getElementById('class-stats'), classRows);
+  renderInto(
+    document.getElementById('hint-stats'),
+    hintLevelGroups(sessions).map(([level, group]) => hintLevelRow(level, group)),
+    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
+  );
   renderInto(
     document.getElementById('session-stats'),
     [...sessions]
@@ -522,6 +605,6 @@ export async function load() {
 
 // Mirrors app.js's window.__ctb hooks: lets the tests drive rendering from
 // fixtures, and makes the shaping poke-able from DevTools.
-window.__ctbStats = { load, render, rollUp, rateRows, setFilter, isToday };
+window.__ctbStats = { load, render, rollUp, rateRows, setFilter, isToday, hintLevelGroups, hintLevelStats };
 
 load();

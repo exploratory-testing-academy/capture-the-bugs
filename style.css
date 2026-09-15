@@ -498,6 +498,40 @@ h2 {
   font-weight: 600;
   color: #2563eb;
 }
+
+/* ── Results by hint level ─────────────────────────────────────────────────── */
+.hint-level-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #f9fafb;
+  margin-bottom: 0.5rem;
+}
+.hint-level-name {
+  font-weight: 600;
+  min-width: 8rem;
+}
+.hint-level-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  flex: 1;
+}
+.hint-stat {
+  min-width: 5rem;
+}
+.hint-stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+.hint-stat-label {
+  font-size: 0.75rem;
+  color: #666;
+}
 .empty-state {
   color: #888;
   font-style: italic;

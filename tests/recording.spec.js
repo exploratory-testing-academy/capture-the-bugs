@@ -23,10 +23,14 @@ async function interceptEvents(page) {
   return posted;
 }
 
-async function open(page, { record = 'on' } = {}) {
+async function open(page, { record = 'on', hints = null } = {}) {
   await page.goto('/index.html');
   await page.evaluate(() => localStorage.clear());
-  await page.goto(record ? `/index.html?record=${record}` : '/index.html');
+  const params = new URLSearchParams();
+  if (record) params.set('record', record);
+  if (hints) params.set('hints', hints);
+  const qs = params.toString();
+  await page.goto(qs ? `/index.html?${qs}` : '/index.html');
   await expect(page.locator('#target-list .target-card')).toHaveCount(1);
 }
 
@@ -77,6 +81,21 @@ test.describe('session recording', () => {
     // A session exists before any input does, so an abandoned attempt is still
     // visible as an attempt.
     expect(posted.some(e => e.type === 'input')).toBe(false);
+  });
+
+  test('records the hint level in effect, on session_start and on evaluate', async ({ page }) => {
+    const posted = await interceptEvents(page);
+    await open(page, { hints: 'detail' });
+    await startTarget(page);
+    await submitInput(page, 'first\nsecond');
+    await page.locator('.finding-text').first().fill('Words on separate lines glue together.');
+    await page.evaluate(() => window.__ctb.previewEvaluation());
+    await flush(page);
+
+    const start = posted.find(e => e.type === 'session_start');
+    expect(start.payload.hint_level).toBe('detail');
+    const evaluated = posted.find(e => e.type === 'evaluate');
+    expect(evaluated.payload.hint_level).toBe('detail');
   });
 
   test('records submitted inputs verbatim', async ({ page }) => {
