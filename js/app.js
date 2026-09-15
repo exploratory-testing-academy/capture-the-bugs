@@ -586,14 +586,18 @@ for (const g of GUIDANCE_BUTTONS) {
 // session. This is the explicit way to start counting from zero again — and
 // since the point is a genuinely blind reattempt, it goes further than just
 // the inputs: a new session code, and every hint level back to off, so the
-// next attempt cannot lean on hints revealed during the last one.
+// next attempt cannot lean on hints revealed during the last one. That part
+// must happen every click, even if nothing was captured yet — only the
+// discard-and-log step is conditional on there being something to discard.
 document.getElementById('cov-reset').addEventListener('click', () => {
-  if (getCapturedInputs().length === 0) return;
-  // Record what is about to be discarded before discarding it: how often someone
-  // recounts from zero is itself worth knowing. Recorded against the session
-  // that is about to close, not the new one.
-  noteReset();
-  clearCapturedInputs();
+  if (!target) return;
+  if (getCapturedInputs().length > 0) {
+    // Record what is about to be discarded before discarding it: how often
+    // someone recounts from zero is itself worth knowing. Recorded against
+    // the session that is about to close, not the new one.
+    noteReset();
+    clearCapturedInputs();
+  }
 
   hintLevel = 'off';
   localStorage.setItem('ctb-hint-level', hintLevel);

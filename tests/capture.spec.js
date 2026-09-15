@@ -102,6 +102,18 @@ test.describe('input capture', () => {
     expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
   });
 
+  test('reset turns hints off even when nothing was captured yet', async ({ page }) => {
+    // Clicking reset before typing anything must not silently do nothing —
+    // only the discard-and-log step depends on there being something to
+    // discard, not the hint reset.
+    expect(await captured(page)).toHaveLength(0);
+
+    await page.locator('#cov-reset').click();
+
+    await expect(page.locator('#coverage-live')).toContainText('Coverage feedback hidden');
+    expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
+  });
+
   test('capture does not modify the app under test', async ({ page, context }) => {
     // The target must behave exactly as it would standalone: instrumenting it
     // would change the very thing testers are hunting bugs in. Comparing the

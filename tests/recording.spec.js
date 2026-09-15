@@ -240,6 +240,25 @@ test.describe('session recording', () => {
     expect(last.session_code).toBe(newCode);
   });
 
+  test('reset still mints a new session and clears hints when nothing was captured yet', async ({ page }) => {
+    const posted = await interceptEvents(page);
+    await open(page, { hints: 'all' });
+    await startTarget(page);
+    const code = await page.locator('#session-code').textContent();
+
+    // Nothing typed yet — this must not silently no-op the whole button.
+    await page.locator('#cov-reset').click();
+    await flush(page);
+
+    expect(posted.some(e => e.type === 'reset')).toBe(false);
+    expect(posted.some(e => e.type === 'restart' && e.session_code === code)).toBe(true);
+    const newCode = await page.locator('#session-code').textContent();
+    expect(newCode).toMatch(CODE_SHAPE);
+    expect(newCode).not.toBe(code);
+    expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
+    expect(await page.locator('#res-hint-level').inputValue()).toBe('off');
+  });
+
   test('the code is copyable', async ({ page }) => {
     await interceptEvents(page);
     await open(page);
