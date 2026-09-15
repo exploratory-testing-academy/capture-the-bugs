@@ -37,6 +37,21 @@ body {
 }
 
 /* ── Typography ────────────────────────────────────────────────────────────── */
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.page-title .logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.page-title h1 {
+  margin-bottom: 0;
+}
 h1 {
   font-size: 1.8rem;
   margin-bottom: 0.25rem;

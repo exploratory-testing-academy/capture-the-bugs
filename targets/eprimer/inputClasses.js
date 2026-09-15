@@ -106,10 +106,20 @@ export function hasBlueHighlight(v) {
 // ── The classes ──────────────────────────────────────────────────────────────
 // `why` states what the input probes. `example` is the suite's fixture,
 // shown to the tester only after evaluation.
+//
+// `kind` splits the classes into two testing stances. 'positive' inputs are
+// plausible text a person writes when actually using the tool — the point is
+// whether the E-Prime/word-count domain logic gets it right, even when the
+// case is linguistically tricky (contractions, possessives, compounds) or the
+// bug it exposes has a tokenizer-level cause. 'negative' inputs aren't about
+// domain correctness at all: blank/oversized/out-of-character-set input or
+// markup/injection payloads aimed at error handling, sanitisation and
+// technical robustness rather than E-Prime checking itself.
 
 export const inputClasses = [
   {
     id: 'empty',
+    kind: 'negative',
     label: 'Empty input',
     why: 'Submitting nothing at all — does it count zero words or fall over?',
     example: '""',
@@ -119,6 +129,7 @@ export const inputClasses = [
   },
   {
     id: 'not eprime',
+    kind: 'positive',
     label: 'Plain text, no to-be forms',
     why: 'A clean baseline: nothing should be flagged.',
     example: '"nothing"',
@@ -127,6 +138,7 @@ export const inputClasses = [
   },
   {
     id: 'hamlet',
+    kind: 'positive',
     label: 'Repeated to-be forms',
     why: 'The same discouraged word more than once — are all occurrences counted?',
     example: '"to be or not to be"',
@@ -135,6 +147,7 @@ export const inputClasses = [
   },
   {
     id: 'demo',
+    kind: 'positive',
     label: 'Both highlight colours at once',
     why: 'Shows a confirmed violation (red) and a possible violation (blue) in the same output — exercises both code paths together.',
     example: '"To be or not to be - Hamlet\'s dilemma"',
@@ -143,6 +156,7 @@ export const inputClasses = [
   },
   {
     id: 'be in forms',
+    kind: 'positive',
     label: 'Many to-be forms enumerated',
     why: 'Every conjugation and its negated contraction — checks the discouraged-word list for gaps.',
     example: '"be, being, been, am, is, isn\'t, are, aren\'t, was, ..."',
@@ -154,6 +168,7 @@ export const inputClasses = [
   // tester who only tried one suffix doesn't read as having covered all three.
   {
     id: 'contraction -m / -n\'t',
+    kind: 'positive',
     label: "Contractions of am and negated forms",
     why: "I'm, isn't, aren't, wasn't — whole-word apostrophe forms that the tool's discouraged list holds outright.",
     example: '"I\'m, isn\'t, aren\'t, wasn\'t, weren\'t"',
@@ -162,6 +177,7 @@ export const inputClasses = [
   },
   {
     id: "contraction -'s",
+    kind: 'positive',
     label: "Contractions ending 's",
     why: "it's, he's, there's, that's — the same suffix a possessive uses, so the tool has to tell ownership from a hidden \"is\".",
     example: '"he\'s, she\'s, it\'s, there\'s, that\'s"',
@@ -170,6 +186,7 @@ export const inputClasses = [
   },
   {
     id: "contraction -'re",
+    kind: 'positive',
     label: "Contractions ending 're",
     why: "you're, we're, they're — a contraction of \"are\" with a suffix the discouraged list has no entry for.",
     example: '"you\'re, we\'re, they\'re"',
@@ -178,6 +195,7 @@ export const inputClasses = [
   },
   {
     id: 'slang',
+    kind: 'positive',
     label: 'Slang contractions',
     why: "ain't and amn't — non-standard forms of to be.",
     example: '"ain\'t, amn\'t"',
@@ -186,6 +204,7 @@ export const inputClasses = [
   },
   {
     id: 'possessive',
+    kind: 'positive',
     label: 'Possessive apostrophes',
     why: "A trailing 's that means ownership, not \"is\" — false positives live here.",
     example: '"Hanna\'s Esa\'s Meera\'s Süëss-O\'Reggio\'s or Okechukwu\'s"',
@@ -194,6 +213,7 @@ export const inputClasses = [
   },
   {
     id: 'quoted be',
+    kind: 'positive',
     label: 'Discouraged word in quotes',
     why: 'Quote marks becoming part of the word, hiding a violation.',
     example: `"'be'"`,
@@ -202,6 +222,7 @@ export const inputClasses = [
   },
   {
     id: 'not verb',
+    kind: 'positive',
     label: '"being" used as a noun',
     why: 'A human being is not a verb — context awareness.',
     example: '"human being"',
@@ -211,6 +232,7 @@ export const inputClasses = [
   },
   {
     id: 'typewriters apostrophe',
+    kind: 'positive',
     label: 'Straight apostrophe',
     why: 'The plain keyboard apostrophe, as a baseline for the curly one.',
     example: '"typewriter\'s apostrophe"',
@@ -219,6 +241,7 @@ export const inputClasses = [
   },
   {
     id: 'typesetters apostrophe',
+    kind: 'positive',
     label: 'Curly / smart apostrophe',
     why: 'What you get pasting from Word or a phone — often handled differently.',
     example: '"typesetter’s apostrophe"',
@@ -227,6 +250,7 @@ export const inputClasses = [
   },
   {
     id: 'newline',
+    kind: 'negative',
     label: 'Whitespace only, with a newline',
     why: 'A newline and nothing else — does an empty line count as a word?',
     example: '"\\n"',
@@ -247,6 +271,7 @@ export const inputClasses = [
   // read as done having probed neither.
   {
     id: 'newline with words',
+    kind: 'positive',
     label: 'Newline as the only separator between words',
     why: 'A line break with no space beside it — the counter stays mid-word across the break, so what follows goes uncounted and runs together in the output.',
     example: '"first\\nsecond"',
@@ -255,6 +280,7 @@ export const inputClasses = [
   },
   {
     id: 'space before newline',
+    kind: 'positive',
     label: 'Space before a line break',
     why: 'A line ending in a space before Enter — the break itself gets counted as a word, so the count is inflated rather than short, and the stray space shifts the output.',
     example: '"first \\n second"',
@@ -269,6 +295,7 @@ export const inputClasses = [
   // sit before or between.
   {
     id: 'blank lines',
+    kind: 'positive',
     label: 'Blank lines before or between text',
     why: 'A line with nothing on it — each blank line emits an empty paragraph into the output, and a leading break is counted as a word nobody typed.',
     example: '"\\n\\nfirst second"',
@@ -278,6 +305,7 @@ export const inputClasses = [
   },
   {
     id: 'long word',
+    kind: 'negative',
     label: 'One very long unbroken word',
     why: 'No whitespace to wrap on — layout and performance pressure.',
     example: '1000 × "x"',
@@ -287,6 +315,7 @@ export const inputClasses = [
   },
   {
     id: 'file',
+    kind: 'positive',
     label: 'Large multi-paragraph text',
     why: 'Realistic document-sized input rather than a phrase.',
     example: 'sample.txt (508 words)',
@@ -295,6 +324,7 @@ export const inputClasses = [
   },
   {
     id: 'bible',
+    kind: 'negative',
     label: 'Very large text',
     why: 'Tens of thousands of words — where performance and counters break.',
     example: 'bible.txt (31,172 words)',
@@ -307,6 +337,7 @@ export const inputClasses = [
   // every other character silently ends a word.
   {
     id: 'digits beside letters',
+    kind: 'positive',
     label: 'Digits touching letters',
     why: 'A digit ends a word, so "7am" splits into "7" and "am" — and "am" then counts as a discouraged word the tester never wrote.',
     example: '"I woke at 7am"',
@@ -315,6 +346,7 @@ export const inputClasses = [
   },
   {
     id: 'hyphenated words',
+    kind: 'positive',
     label: 'Hyphenated words',
     why: 'A hyphen splits the word, so "well-being" becomes "well" + "being" and the noun gets flagged as a verb.',
     example: '"well-being"',
@@ -323,6 +355,7 @@ export const inputClasses = [
   },
   {
     id: 'to-be as substring',
+    kind: 'positive',
     label: 'To-be forms inside longer words',
     why: 'before, maybe, beam, island — these merely contain a to-be spelling and must not be flagged.',
     example: '"before maybe beam island"',
@@ -336,6 +369,7 @@ export const inputClasses = [
   // ── Apostrophe edge cases ──────────────────────────────────────────────────
   {
     id: 'plural possessive',
+    kind: 'positive',
     label: 'Plural possessive (trailing apostrophe)',
     why: "boys' ends in a bare apostrophe rather than 's, so it takes a different path from boy's.",
     example: '"the boys\' toys"',
@@ -344,6 +378,7 @@ export const inputClasses = [
   },
   {
     id: 'bare or leading apostrophe',
+    kind: 'negative',
     label: 'Leading or standalone apostrophe',
     why: "An apostrophe with no word before it — 'tis, or an apostrophe on its own.",
     example: `"'tis ' ''"`,
@@ -352,6 +387,7 @@ export const inputClasses = [
   },
   {
     id: 'non-to-be contractions',
+    kind: 'positive',
     label: 'Contractions unrelated to to-be',
     why: "don't, can't, won't — same n't shape as isn't but no to-be in them, so none should be flagged.",
     example: '"don\'t, can\'t, won\'t"',
@@ -363,6 +399,7 @@ export const inputClasses = [
   // Output is written with innerHTML and only < and > are escaped.
   {
     id: 'double-quoted to-be',
+    kind: 'positive',
     label: 'Discouraged word in double quotes',
     why: 'Double quotes split the word, so "is" is caught while \'is\' is not — the contrast exposes the inconsistency.',
     example: '"\\"is\\" versus \'is\'"',
@@ -371,6 +408,7 @@ export const inputClasses = [
   },
   {
     id: 'ampersands and entities',
+    kind: 'negative',
     label: 'Ampersands and HTML entities',
     why: 'Only < and > get escaped, so a typed &lt; comes back out as a literal < and an & can corrupt the output.',
     example: '"&lt;is&gt; &amp;"',
@@ -379,6 +417,7 @@ export const inputClasses = [
   },
   {
     id: 'html or script markup',
+    kind: 'negative',
     label: 'HTML tags or script markup',
     why: 'Tags reach an innerHTML sink; they also add false word counts and violations.',
     example: '"<b>is</b>"',
@@ -390,6 +429,7 @@ export const inputClasses = [
   // Word counting only ever compares a character against ' '.
   {
     id: 'spaces only',
+    kind: 'negative',
     label: 'Spaces only, no newline',
     why: 'Whitespace with nothing in it — distinct from an empty box and from a bare newline.',
     example: '"   "',
@@ -399,6 +439,7 @@ export const inputClasses = [
   },
   {
     id: 'tabs',
+    kind: 'negative',
     label: 'Tab-separated words',
     why: 'A tab is not a space, so "one\\ttwo" counts as one word instead of two.',
     example: '"one\\ttwo\\tthree"',
@@ -408,6 +449,7 @@ export const inputClasses = [
   },
   {
     id: 'non-breaking space',
+    kind: 'negative',
     label: 'Non-breaking space',
     why: 'Looks exactly like a space but is U+00A0, so the word count silently disagrees with what you see.',
     example: '"one\\u00A0two"',
@@ -417,6 +459,7 @@ export const inputClasses = [
   },
   {
     id: 'zero width characters',
+    kind: 'negative',
     label: 'Zero-width / invisible characters',
     why: 'Invisible characters split words with nothing on screen to explain the counts.',
     example: '"is\\u200Bbeing"',
@@ -428,6 +471,7 @@ export const inputClasses = [
   // ── Character sets ─────────────────────────────────────────────────────────
   {
     id: 'accented latin',
+    kind: 'negative',
     label: 'Accented Latin letters',
     why: 'Accented letters fall outside the accepted character set, so they split words mid-string.',
     example: '"café naïve Süëss"',
@@ -436,6 +480,7 @@ export const inputClasses = [
   },
   {
     id: 'non-latin script',
+    kind: 'negative',
     label: 'Non-Latin scripts',
     why: 'Cyrillic, CJK, Arabic and Hebrew have no accepted characters at all — every word count collapses, and RTL text also tests rendering.',
     example: '"Привет 你好 مرحبا שלום"',
@@ -444,6 +489,7 @@ export const inputClasses = [
   },
   {
     id: 'emoji',
+    kind: 'negative',
     label: 'Emoji',
     why: 'Multi-code-point characters that split words and can break counting per code unit rather than per character.',
     example: '"is 🎉 being 👨‍👩‍👧‍👦"',
