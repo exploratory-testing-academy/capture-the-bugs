@@ -282,6 +282,34 @@ h2 {
   margin-bottom: 0.4rem;
 }
 
+.guidance-links {
+  display: flex;
+  gap: 0.5rem;
+}
+.guidance-content {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+.guidance-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+.guidance-heading {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.82rem;
+  color: #444;
+}
+.guidance-content ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.guidance-content li {
+  margin-bottom: 0.3rem;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;

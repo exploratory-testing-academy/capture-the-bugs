@@ -98,6 +98,21 @@ test.describe('session recording', () => {
     expect(evaluated.payload.hint_level).toBe('detail');
   });
 
+  test('records opening a guidance panel, but not closing one', async ({ page }) => {
+    const posted = await interceptEvents(page);
+    await open(page);
+    await startTarget(page);
+
+    await page.locator('#user-stories-btn').click();
+    await page.locator('#test-strategy-btn').click();
+    // Toggling the open one shut must not read as opening it again.
+    await page.locator('#test-strategy-btn').click();
+    await flush(page);
+
+    const guidance = posted.filter(e => e.type === 'guidance');
+    expect(guidance.map(e => e.payload.kind)).toEqual(['stories', 'strategy']);
+  });
+
   test('records submitted inputs verbatim', async ({ page }) => {
     const posted = await interceptEvents(page);
     await open(page);

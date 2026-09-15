@@ -5,7 +5,7 @@ import {
 } from './capture.js';
 import { computeCoverage, classifyValue } from './coverage.js';
 import {
-  startSession, endSession, noteReset, noteEvaluation, currentCode,
+  startSession, endSession, noteReset, noteEvaluation, noteGuidance, currentCode,
   isRecording, localSessionLog, flushNow
 } from './record.js';
 
@@ -69,11 +69,26 @@ async function startTarget(meta) {
     inputClasses = mod.inputClasses;
   }
 
+  // Optional per-target guidance: neither is derived from the answer key, so a
+  // target that has not written them yet simply has nothing to show.
+  let userStories = null;
+  if (meta.userStoriesModule) {
+    const mod = await import(`../${meta.userStoriesModule}`);
+    userStories = mod.userStories;
+  }
+  let testStrategy = null;
+  if (meta.testStrategyModule) {
+    const mod = await import(`../${meta.testStrategyModule}`);
+    testStrategy = mod.testStrategy;
+  }
+
   target = {
     meta,
     bugs: bugsModule.bugs,
     totalPoints: bugsModule.totalPoints,
-    inputClasses
+    inputClasses,
+    userStories,
+    testStrategy
   };
 
   // Restore findings for this target
@@ -101,6 +116,7 @@ async function startTarget(meta) {
   onCapture(renderLiveCoverage);
   renderLiveCoverage();
   renderResultHints();
+  closeGuidancePanel();
 
   showView('explore');
   if (findings.length === 0) addFinding();
@@ -477,6 +493,84 @@ document.getElementById('give-hint-btn').addEventListener('click', () => {
     const bug = target.bugs[Math.floor(Math.random() * target.bugs.length)];
     box.innerHTML = `<span class="give-hint-kind">Bug category</span>${escapeHtml(bug.category)}`;
   }
+});
+
+// ── Guidance (user stories / test strategy) ─────────────────────────────────
+// Reference material to bring into a session, not feedback on it — unlike
+// everything else in the Hints panel this never changes with what the tester
+// has done so far, so there is nothing to re-render as they work.
+const userStoriesBtn = document.getElementById('user-stories-btn');
+const testStrategyBtn = document.getElementById('test-strategy-btn');
+const guidanceContent = document.getElementById('guidance-content');
+let guidanceShown = null; // null | 'stories' | 'strategy'
+
+function closeGuidancePanel() {
+  guidanceShown = null;
+  guidanceContent.style.display = 'none';
+  guidanceContent.replaceChildren();
+  userStoriesBtn.setAttribute('aria-expanded', 'false');
+  testStrategyBtn.setAttribute('aria-expanded', 'false');
+}
+
+function renderGuidance(data) {
+  guidanceContent.replaceChildren();
+  if (!data) {
+    const p = document.createElement('p');
+    p.className = 'empty-state';
+    p.textContent = 'Not written up for this target yet.';
+    guidanceContent.appendChild(p);
+    return;
+  }
+
+  const h = document.createElement('h4');
+  h.className = 'guidance-title';
+  h.textContent = data.title;
+  guidanceContent.appendChild(h);
+
+  const itemList = (items) => {
+    const ul = document.createElement('ul');
+    items.forEach(text => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      ul.appendChild(li);
+    });
+    guidanceContent.appendChild(ul);
+  };
+
+  if (data.items) itemList(data.items);
+
+  if (data.sections) {
+    for (const section of data.sections) {
+      const h5 = document.createElement('h5');
+      h5.className = 'guidance-heading';
+      h5.textContent = section.heading;
+      guidanceContent.appendChild(h5);
+      itemList(section.items);
+    }
+  }
+}
+
+function toggleGuidance(kind, data) {
+  if (guidanceShown === kind) {
+    closeGuidancePanel();
+    return;
+  }
+  guidanceShown = kind;
+  guidanceContent.style.display = 'block';
+  userStoriesBtn.setAttribute('aria-expanded', String(kind === 'stories'));
+  testStrategyBtn.setAttribute('aria-expanded', String(kind === 'strategy'));
+  renderGuidance(data);
+  noteGuidance(kind);
+}
+
+userStoriesBtn.addEventListener('click', () => {
+  if (!target) return;
+  toggleGuidance('stories', target.userStories);
+});
+
+testStrategyBtn.addEventListener('click', () => {
+  if (!target) return;
+  toggleGuidance('strategy', target.testStrategy);
 });
 
 // Captured inputs persist per target, so re-entering a target resumes the old

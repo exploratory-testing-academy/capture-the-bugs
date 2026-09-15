@@ -5,6 +5,8 @@
   "appPath": "targets/eprimer/app/index.html",
   "bugsModule": "targets/eprimer/bugs.js",
   "inputClassesModule": "targets/eprimer/inputClasses.js",
+  "userStoriesModule": "targets/eprimer/userStories.js",
+  "testStrategyModule": "targets/eprimer/testStrategy.js",
   "sourceUrl": "https://maaretp.com/app/",
   "attribution": "Test target from collections of Alan Richardson (eviltester)"
 }

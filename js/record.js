@@ -343,6 +343,18 @@ export function noteReset() {
   } catch { /* ignore */ }
 }
 
+// The tester opened one of the reference panels under Hints — the user-story
+// brief or the test strategy. Recorded on open only, not on close, so this
+// answers "did they ever reach for it" the same way matched_bug_ids answers
+// "did they ever land on it", rather than counting toggles back and forth.
+export function noteGuidance(kind) {
+  try {
+    if (!enabled) return;
+    push('guidance', { kind });
+    flush();
+  } catch { /* ignore */ }
+}
+
 export function noteEvaluation(results, coverage) {
   try {
     if (!enabled) return;
