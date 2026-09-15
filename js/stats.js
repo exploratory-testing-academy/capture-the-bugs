@@ -29,6 +29,14 @@ const loadingEl = document.getElementById('stats-loading');
 const loadingText = document.getElementById('stats-loading-text');
 const errorEl = document.getElementById('stats-error');
 const bodyEl = document.getElementById('stats-body');
+const filterAllBtn = document.getElementById('filter-all');
+const filterTodayBtn = document.getElementById('filter-today');
+
+// The full session list and answer keys as loaded, kept aside so switching
+// between "today" and "all time" is a re-filter, not a re-fetch.
+let allSessions = [];
+let allKeysByTarget = new Map();
+let currentFilter = 'all';
 
 // ── Fetching ─────────────────────────────────────────────────────────────────
 async function fetchAll(view, query) {
@@ -123,6 +131,16 @@ function rollUp(summaries, evaluates, findings, inputs = []) {
   }
 
   return [...sessions.values()];
+}
+
+// Whether a session started today, in the viewer's own timezone — the tester
+// looking at the page, not the server that recorded the timestamp.
+function isToday(isoString) {
+  const d = new Date(isoString);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
 }
 
 // Pairs each written finding with what the evaluator made of it.
@@ -374,12 +392,12 @@ function sessionRow(s, bugsById) {
   return wrap;
 }
 
-function renderInto(container, rows) {
+function renderInto(container, rows, emptyText = 'Nothing recorded yet.') {
   container.replaceChildren();
   if (rows.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty-state';
-    empty.textContent = 'Nothing recorded yet.';
+    empty.textContent = emptyText;
     container.appendChild(empty);
     return;
   }
@@ -432,12 +450,28 @@ export function render(sessions, keysByTarget) {
     document.getElementById('session-stats'),
     [...sessions]
       .sort((a, b) => new Date(b.first_seen) - new Date(a.first_seen))
-      .map(s => sessionRow(s, bugsById))
+      .map(s => sessionRow(s, bugsById)),
+    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
   );
 
   loadingEl.style.display = 'none';
   bodyEl.style.display = 'block';
 }
+
+// ── Filtering ────────────────────────────────────────────────────────────────
+function setFilter(filter) {
+  currentFilter = filter;
+  filterAllBtn.classList.toggle('filter-btn-active', filter === 'all');
+  filterAllBtn.setAttribute('aria-pressed', String(filter === 'all'));
+  filterTodayBtn.classList.toggle('filter-btn-active', filter === 'today');
+  filterTodayBtn.setAttribute('aria-pressed', String(filter === 'today'));
+
+  const sessions = filter === 'today' ? allSessions.filter(s => isToday(s.first_seen)) : allSessions;
+  render(sessions, allKeysByTarget);
+}
+
+filterAllBtn.addEventListener('click', () => setFilter('all'));
+filterTodayBtn.addEventListener('click', () => setFilter('today'));
 
 function fail(err) {
   loadingEl.style.display = 'none';
@@ -478,7 +512,9 @@ export async function load() {
       }
     }
 
-    render(sessions, keysByTarget);
+    allSessions = sessions;
+    allKeysByTarget = keysByTarget;
+    setFilter(currentFilter);
   } catch (err) {
     fail(err);
   }
@@ -486,6 +522,6 @@ export async function load() {
 
 // Mirrors app.js's window.__ctb hooks: lets the tests drive rendering from
 // fixtures, and makes the shaping poke-able from DevTools.
-window.__ctbStats = { load, render, rollUp, rateRows };
+window.__ctbStats = { load, render, rollUp, rateRows, setFilter, isToday };
 
 load();

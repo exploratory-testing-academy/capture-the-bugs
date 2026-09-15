@@ -1,7 +1,5 @@
 # Collecting some ideas of what could be in here
 
-- input coverage and results coverage
-- session stats: today and all time
 - A switch between production and test database to be implemented by some mechanism 
 - input classification would do well classified to positive / negative tests of the application to encourage testing of actual usage flows over all the error handling an app could theoretically need.
 - Time tracking: how long we thing coverage takes vs. how long the person took to do the assignment, and whether their results were following the "in the time used, most important testing got done" -heuristic

@@ -93,6 +93,43 @@ test('summarises every recorded session', async ({ page }) => {
   await expect(page.locator('#stat-total-bugs')).toHaveText('63');
 });
 
+test('defaults to all time, then filters down to sessions started today', async ({ page }) => {
+  const now = new Date();
+  const summaries = [
+    { ...SUMMARIES[0], session_code: 'today-session', first_seen: now.toISOString(), last_seen: now.toISOString() },
+    { ...SUMMARIES[1], session_code: 'past-session' }
+  ];
+
+  await openStats(page, { summaries, evaluates: [], findings: [] });
+
+  await expect(page.locator('#filter-all')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#filter-today')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#stat-sessions')).toHaveText('2');
+  await expect(page.locator('#session-stats details')).toHaveCount(2);
+
+  await page.locator('#filter-today').click();
+
+  await expect(page.locator('#filter-today')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#filter-all')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#stat-sessions')).toHaveText('1');
+  await expect(page.locator('#session-stats details')).toHaveCount(1);
+  await expect(page.locator('#session-stats code')).toHaveText('today-session');
+
+  await page.locator('#filter-all').click();
+  await expect(page.locator('#stat-sessions')).toHaveText('2');
+  await expect(page.locator('#session-stats details')).toHaveCount(2);
+});
+
+test('shows a today-specific empty state when nothing happened today', async ({ page }) => {
+  // Both fixture sessions are from August 2026, so "today" never matches them.
+  await openStats(page);
+
+  await page.locator('#filter-today').click();
+
+  await expect(page.locator('#stat-sessions')).toHaveText('0');
+  await expect(page.locator('#session-stats .empty-state')).toHaveText('No sessions today.');
+});
+
 test('rates every bug against the sessions that were scored', async ({ page }) => {
   await openStats(page);
 
