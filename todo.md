@@ -1,5 +1,6 @@
 # Collecting some ideas of what could be in here
 
+- session stats: today and all time
 - A switch between production and test database to be implemented by some mechanism 
 - input classification would do well classified to positive / negative tests of the application to encourage testing of actual usage flows over all the error handling an app could theoretically need.
 - Decide what to do about the bug with the link not working to the eviltester github. We need to either fix it or add it to the list of bugs. 

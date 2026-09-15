@@ -40,16 +40,25 @@ body {
 .page-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 .page-title .logo {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 6px;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
 }
+.page-title-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .page-title h1 {
+  margin-bottom: 0.15rem;
+}
+.page-title .subtitle {
   margin-bottom: 0;
 }
 h1 {
