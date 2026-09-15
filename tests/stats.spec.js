@@ -129,6 +129,7 @@ test('shows a today-specific empty state when nothing happened today', async ({ 
   await expect(page.locator('#stat-sessions')).toHaveText('0');
   await expect(page.locator('#session-stats .empty-state')).toHaveText('No sessions today.');
   await expect(page.locator('#hint-stats .empty-state')).toHaveText('No sessions today.');
+  await expect(page.locator('#guidance-stats .empty-state')).toHaveText('No sessions today.');
 });
 
 test('breaks down results by the hint level in effect', async ({ page }) => {
@@ -156,6 +157,41 @@ test('breaks down results by the hint level in effect', async ({ page }) => {
   // Never submitted, so the scored-only averages have nothing to average.
   await expect(detailStats.nth(3)).toContainText('—');
   await expect(detailStats.nth(4)).toContainText('—');
+});
+
+test('breaks down results by whether guidance was opened', async ({ page }) => {
+  const summaries = [
+    { ...SUMMARIES[0], used_user_stories: true, used_test_strategy: false },
+    { ...SUMMARIES[1], used_user_stories: false, used_test_strategy: true }
+  ];
+  await openStats(page, { summaries });
+
+  const headings = page.locator('#guidance-stats .cov-group');
+  await expect(headings).toHaveCount(2);
+  await expect(headings.first()).toHaveText('User stories');
+  await expect(headings.nth(1)).toHaveText('Test strategy');
+
+  const rows = page.locator('#guidance-stats .hint-level-row');
+  await expect(rows).toHaveCount(4);
+
+  // User stories: opened by keen-ember (submitted, matched 2), not by quiet-otter.
+  await expect(rows.nth(0).locator('.hint-level-name')).toHaveText('Opened');
+  const storiesOpened = rows.nth(0).locator('.hint-stat');
+  await expect(storiesOpened.nth(0)).toContainText('1');
+  await expect(storiesOpened.nth(1)).toContainText('100%');
+  await expect(storiesOpened.nth(3)).toContainText('2.0');
+
+  await expect(rows.nth(1).locator('.hint-level-name')).toHaveText('Not opened');
+  await expect(rows.nth(1).locator('.hint-stat').nth(1)).toContainText('0%');
+
+  // Test strategy: the reverse split.
+  await expect(rows.nth(2).locator('.hint-level-name')).toHaveText('Opened');
+  await expect(rows.nth(2).locator('.hint-stat').nth(1)).toContainText('0%');
+
+  await expect(rows.nth(3).locator('.hint-level-name')).toHaveText('Not opened');
+  const strategyNotOpened = rows.nth(3).locator('.hint-stat');
+  await expect(strategyNotOpened.nth(1)).toContainText('100%');
+  await expect(strategyNotOpened.nth(3)).toContainText('2.0');
 });
 
 test('rates every bug against the sessions that were scored', async ({ page }) => {
@@ -359,4 +395,5 @@ test('copes with no sessions at all', async ({ page }) => {
   await expect(page.locator('#session-stats .empty-state')).toHaveText('Nothing recorded yet.');
   await expect(page.locator('#bug-stats .empty-state')).toBeVisible();
   await expect(page.locator('#hint-stats .empty-state')).toHaveText('Nothing recorded yet.');
+  await expect(page.locator('#guidance-stats .empty-state')).toHaveText('Nothing recorded yet.');
 });

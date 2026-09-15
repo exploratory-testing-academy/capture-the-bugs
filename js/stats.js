@@ -446,14 +446,18 @@ function statPair(value, label) {
   return block;
 }
 
-function hintLevelRow(level, sessions) {
+// A labeled row of the same five stat pairs, reused for both the hint-level
+// breakdown (label = a level) and the guidance breakdown (label = "Opened" /
+// "Not opened") — the shape of "what did this group of sessions come away
+// with" does not depend on what split the group.
+function labeledStatsRow(label, sessions) {
   const stats = hintLevelStats(sessions);
   const row = document.createElement('div');
   row.className = 'hint-level-row';
 
   const name = document.createElement('div');
   name.className = 'hint-level-name';
-  name.textContent = HINT_LEVEL_LABELS[level];
+  name.textContent = label;
   row.appendChild(name);
 
   const wrap = document.createElement('div');
@@ -468,6 +472,36 @@ function hintLevelRow(level, sessions) {
   row.appendChild(wrap);
 
   return row;
+}
+
+function hintLevelRow(level, sessions) {
+  return labeledStatsRow(HINT_LEVEL_LABELS[level], sessions);
+}
+
+// Each guidance panel is its own yes/no split rather than a shared level, so
+// "opened" and "not opened" are compared within each kind rather than lumped
+// into one combined breakdown.
+const GUIDANCE_KINDS = [
+  { key: 'used_user_stories', label: 'User stories' },
+  { key: 'used_test_strategy', label: 'Test strategy' }
+];
+
+function guidanceHeading(text) {
+  const h = document.createElement('h3');
+  h.className = 'cov-group';
+  h.textContent = text;
+  return h;
+}
+
+function guidanceRows(sessions) {
+  if (sessions.length === 0) return [];
+  const rows = [];
+  for (const kind of GUIDANCE_KINDS) {
+    rows.push(guidanceHeading(kind.label));
+    rows.push(labeledStatsRow('Opened', sessions.filter(s => Boolean(s[kind.key]))));
+    rows.push(labeledStatsRow('Not opened', sessions.filter(s => !s[kind.key])));
+  }
+  return rows;
 }
 
 function renderInto(container, rows, emptyText = 'Nothing recorded yet.') {
@@ -527,6 +561,11 @@ export function render(sessions, keysByTarget) {
   renderInto(
     document.getElementById('hint-stats'),
     hintLevelGroups(sessions).map(([level, group]) => hintLevelRow(level, group)),
+    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
+  );
+  renderInto(
+    document.getElementById('guidance-stats'),
+    guidanceRows(sessions),
     currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
   );
   renderInto(
@@ -605,6 +644,9 @@ export async function load() {
 
 // Mirrors app.js's window.__ctb hooks: lets the tests drive rendering from
 // fixtures, and makes the shaping poke-able from DevTools.
-window.__ctbStats = { load, render, rollUp, rateRows, setFilter, isToday, hintLevelGroups, hintLevelStats };
+window.__ctbStats = {
+  load, render, rollUp, rateRows, setFilter, isToday,
+  hintLevelGroups, hintLevelStats, guidanceRows
+};
 
 load();
