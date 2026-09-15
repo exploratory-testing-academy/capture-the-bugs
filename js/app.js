@@ -69,8 +69,8 @@ async function startTarget(meta) {
     inputClasses = mod.inputClasses;
   }
 
-  // Optional per-target guidance: neither is derived from the answer key, so a
-  // target that has not written them yet simply has nothing to show.
+  // Optional per-target guidance: none of these are derived from the answer
+  // key, so a target that has not written them yet simply has nothing to show.
   let userStories = null;
   if (meta.userStoriesModule) {
     const mod = await import(`../${meta.userStoriesModule}`);
@@ -81,6 +81,11 @@ async function startTarget(meta) {
     const mod = await import(`../${meta.testStrategyModule}`);
     testStrategy = mod.testStrategy;
   }
+  let requirements = null;
+  if (meta.requirementsModule) {
+    const mod = await import(`../${meta.requirementsModule}`);
+    requirements = mod.requirements;
+  }
 
   target = {
     meta,
@@ -88,7 +93,8 @@ async function startTarget(meta) {
     totalPoints: bugsModule.totalPoints,
     inputClasses,
     userStories,
-    testStrategy
+    testStrategy,
+    requirements
   };
 
   // Restore findings for this target
@@ -432,9 +438,13 @@ function renderResultHints() {
   }
 
   const byCategory = bugsByCategory(target.bugs);
+  const triggerable = target.bugs.filter(b => b.inputTriggerable).length;
+  const highImpact = target.bugs.filter(b => b.highImpact).length;
   msg.className = '';
   msg.textContent =
-    `There are ${target.bugs.length} bugs across ${byCategory.size} categories waiting to be found.`;
+    `There are ${target.bugs.length} bugs across ${byCategory.size} categories waiting to be found ` +
+    `— ${triggerable} triggered by specific input, ${target.bugs.length - triggerable} found by observation, ` +
+    `${highImpact} of them high impact.`;
 
   if (resultHintLevel === 'count') return;
 
@@ -495,21 +505,24 @@ document.getElementById('give-hint-btn').addEventListener('click', () => {
   }
 });
 
-// ── Guidance (user stories / test strategy) ─────────────────────────────────
+// ── Guidance (user stories / test strategy / requirements) ─────────────────
 // Reference material to bring into a session, not feedback on it — unlike
 // everything else in the Hints panel this never changes with what the tester
-// has done so far, so there is nothing to re-render as they work.
-const userStoriesBtn = document.getElementById('user-stories-btn');
-const testStrategyBtn = document.getElementById('test-strategy-btn');
+// has done so far, so there is nothing to re-render as they work. Table-driven
+// so a fourth button is one entry here, not a rewrite of the toggle logic.
+const GUIDANCE_BUTTONS = [
+  { kind: 'stories', btn: document.getElementById('user-stories-btn'), data: () => target.userStories },
+  { kind: 'strategy', btn: document.getElementById('test-strategy-btn'), data: () => target.testStrategy },
+  { kind: 'requirements', btn: document.getElementById('requirements-btn'), data: () => target.requirements }
+];
 const guidanceContent = document.getElementById('guidance-content');
-let guidanceShown = null; // null | 'stories' | 'strategy'
+let guidanceShown = null; // null | 'stories' | 'strategy' | 'requirements'
 
 function closeGuidancePanel() {
   guidanceShown = null;
   guidanceContent.style.display = 'none';
   guidanceContent.replaceChildren();
-  userStoriesBtn.setAttribute('aria-expanded', 'false');
-  testStrategyBtn.setAttribute('aria-expanded', 'false');
+  for (const g of GUIDANCE_BUTTONS) g.btn.setAttribute('aria-expanded', 'false');
 }
 
 function renderGuidance(data) {
@@ -557,21 +570,17 @@ function toggleGuidance(kind, data) {
   }
   guidanceShown = kind;
   guidanceContent.style.display = 'block';
-  userStoriesBtn.setAttribute('aria-expanded', String(kind === 'stories'));
-  testStrategyBtn.setAttribute('aria-expanded', String(kind === 'strategy'));
+  for (const g of GUIDANCE_BUTTONS) g.btn.setAttribute('aria-expanded', String(g.kind === kind));
   renderGuidance(data);
   noteGuidance(kind);
 }
 
-userStoriesBtn.addEventListener('click', () => {
-  if (!target) return;
-  toggleGuidance('stories', target.userStories);
-});
-
-testStrategyBtn.addEventListener('click', () => {
-  if (!target) return;
-  toggleGuidance('strategy', target.testStrategy);
-});
+for (const g of GUIDANCE_BUTTONS) {
+  g.btn.addEventListener('click', () => {
+    if (!target) return;
+    toggleGuidance(g.kind, g.data());
+  });
+}
 
 // Captured inputs persist per target, so re-entering a target resumes the old
 // session. This is the explicit way to start counting from zero again.

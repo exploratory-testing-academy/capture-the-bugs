@@ -203,6 +203,15 @@ export const inputClasses = [
     detect: v => SLANG.test(v)
   },
   {
+    id: "let's",
+    kind: 'positive',
+    label: "Let's (no to-be form at all)",
+    why: "let's is short for \"let us\" and contains no form of to be, but it still ends in 's — does the tool tell it apart from a real contraction?",
+    example: '"let\'s go"',
+    sample: "let's go, let's see",
+    detect: v => /\blet['’]s\b/i.test(v)
+  },
+  {
     id: 'possessive',
     kind: 'positive',
     label: 'Possessive apostrophes',
@@ -229,6 +238,15 @@ export const inputClasses = [
     sample: 'a human being is a living being',
     detect: v =>
       /\b(a|an|the|human|living|new|every|another|social|supreme|sentient)\s+beings?\b/i.test(v)
+  },
+  {
+    id: 'acronym matching to-be',
+    kind: 'positive',
+    label: 'Acronym spelled like a to-be word',
+    why: 'AM, IS, BE and WAS as initialisms are not the verb, but the check is case-insensitive with no way to tell an acronym from the word it happens to spell.',
+    example: '"AM radio"',
+    sample: 'AM radio, IS a station, BE Networks, WAS Berlin',
+    detect: v => /\b(AM|IS|BE|WAS)\b/.test(v)
   },
   {
     id: 'typewriters apostrophe',
@@ -354,6 +372,24 @@ export const inputClasses = [
     detect: v => /[A-Za-z]-[A-Za-z]/.test(v)
   },
   {
+    id: 'underscore beside letters',
+    kind: 'positive',
+    label: 'Underscore touching a to-be form',
+    why: 'An underscore ends a word the same way a space does, so was_here reports was as a violation nobody wrote.',
+    example: '"was_here"',
+    sample: 'was_here, is_valid, code_was_deleted',
+    detect: v => /_(be|being|been|am|is|are|was|were)\b|\b(be|being|been|am|is|are|was|were)_/i.test(v)
+  },
+  {
+    id: 'standalone punctuation',
+    kind: 'positive',
+    label: 'A punctuation mark standing alone as a word',
+    why: 'A lone symbol surrounded by spaces is counted as a word of its own, inflating the count above the number of words actually written.',
+    example: '"one - two"',
+    sample: 'one - two, three / four',
+    detect: v => /(^|\s)\p{P}(\s|$)/u.test(v)
+  },
+  {
     id: 'to-be as substring',
     kind: 'positive',
     label: 'To-be forms inside longer words',
@@ -384,6 +420,15 @@ export const inputClasses = [
     example: `"'tis ' ''"`,
     sample: "'tis ' '' o'clock",
     detect: v => /(^|\s)['’]/.test(v)
+  },
+  {
+    id: 'multiple apostrophes',
+    kind: 'positive',
+    label: 'Word with two apostrophes',
+    why: "The possessive/contraction check reads from the FIRST apostrophe onward, so a word like y'all's hides its real 's ending behind an earlier one.",
+    example: '"y\'all\'s"',
+    sample: "y'all's turn, rock'n'roll's history",
+    detect: v => /[\p{L}]+['’][\p{L}]+['’]s\b/u.test(v)
   },
   {
     id: 'non-to-be contractions',

@@ -34,17 +34,17 @@ test.describe('give me one', () => {
   });
 
   test('a high draw names a bug category, never a bug title', async ({ page }) => {
-    // 0.999 fails the < 0.5 check (bug branch) and floor(0.999 * 63) lands on
-    // the answer key's last entry, category "E-Prime Detection".
+    // 0.999 fails the < 0.5 check (bug branch) and floor(0.999 * 72) lands on
+    // the answer key's last entry, category "Code Quality".
     await pinRandom(page, 0.999);
     await openApp(page);
     await startTarget(page);
 
     await page.locator(btn).click();
     await expect(page.locator(kind)).toHaveText('Bug category');
-    await expect(page.locator(result)).toContainText('E-Prime Detection');
+    await expect(page.locator(result)).toContainText('Code Quality');
     // The answer key's matching text must never leak through this shortcut.
-    await expect(page.locator(result)).not.toContainText('detected');
+    await expect(page.locator(result)).not.toContainText('charset');
   });
 
   test('skips an input class already covered in favor of the next untried one', async ({ page }) => {

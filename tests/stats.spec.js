@@ -90,7 +90,7 @@ test('summarises every recorded session', async ({ page }) => {
   // 0 must not be counted twice.
   await expect(page.locator('#stat-findings')).toHaveText('1.5');
   await expect(page.locator('#stat-matched')).toHaveText('2.0');
-  await expect(page.locator('#stat-total-bugs')).toHaveText('63');
+  await expect(page.locator('#stat-total-bugs')).toHaveText('72');
 });
 
 test('defaults to all time, then filters down to sessions started today', async ({ page }) => {
@@ -161,18 +161,19 @@ test('breaks down results by the hint level in effect', async ({ page }) => {
 
 test('breaks down results by whether guidance was opened', async ({ page }) => {
   const summaries = [
-    { ...SUMMARIES[0], used_user_stories: true, used_test_strategy: false },
-    { ...SUMMARIES[1], used_user_stories: false, used_test_strategy: true }
+    { ...SUMMARIES[0], used_user_stories: true, used_test_strategy: false, used_requirements: true },
+    { ...SUMMARIES[1], used_user_stories: false, used_test_strategy: true, used_requirements: false }
   ];
   await openStats(page, { summaries });
 
   const headings = page.locator('#guidance-stats .cov-group');
-  await expect(headings).toHaveCount(2);
+  await expect(headings).toHaveCount(3);
   await expect(headings.first()).toHaveText('User stories');
   await expect(headings.nth(1)).toHaveText('Test strategy');
+  await expect(headings.nth(2)).toHaveText('Requirements');
 
   const rows = page.locator('#guidance-stats .hint-level-row');
-  await expect(rows).toHaveCount(4);
+  await expect(rows).toHaveCount(6);
 
   // User stories: opened by keen-ember (submitted, matched 2), not by quiet-otter.
   await expect(rows.nth(0).locator('.hint-level-name')).toHaveText('Opened');
@@ -192,17 +193,23 @@ test('breaks down results by whether guidance was opened', async ({ page }) => {
   const strategyNotOpened = rows.nth(3).locator('.hint-stat');
   await expect(strategyNotOpened.nth(1)).toContainText('100%');
   await expect(strategyNotOpened.nth(3)).toContainText('2.0');
+
+  // Requirements: same split as user stories, opened only by keen-ember.
+  await expect(rows.nth(4).locator('.hint-level-name')).toHaveText('Opened');
+  await expect(rows.nth(4).locator('.hint-stat').nth(0)).toContainText('1');
+  await expect(rows.nth(5).locator('.hint-level-name')).toHaveText('Not opened');
+  await expect(rows.nth(5).locator('.hint-stat').nth(1)).toContainText('0%');
 });
 
 test('rates every bug against the sessions that were scored', async ({ page }) => {
   await openStats(page);
 
   const rows = page.locator('#bug-stats .bug-item');
-  await expect(rows).toHaveCount(63);
+  await expect(rows).toHaveCount(72);
 
   // Two bugs matched by the one scored session; the rest by nobody. Rows sort
   // hardest-first, so the never-found ones lead.
-  await expect(page.locator('#bug-stats .stat-zero')).toHaveCount(61);
+  await expect(page.locator('#bug-stats .stat-zero')).toHaveCount(70);
   await expect(rows.first().locator('.stat-rate')).toHaveText('never');
   await expect(rows.last().locator('.stat-rate')).toHaveText('100% (1)');
 });
@@ -211,7 +218,7 @@ test('rates input classes the same way', async ({ page }) => {
   await openStats(page);
 
   const rows = page.locator('#class-stats .bug-item');
-  await expect(rows).toHaveCount(37);
+  await expect(rows).toHaveCount(42);
   await expect(rows.last().locator('.stat-rate')).toHaveText('100% (1)');
 });
 
@@ -261,7 +268,7 @@ test('shows what the evaluator made of each finding', async ({ page }) => {
 
   const readings = body.locator('.stat-interp');
   await expect(readings).toHaveCount(2);
-  await expect(readings.first()).toContainText("#1 Contractions of 'to be' not detected");
+  await expect(readings.first()).toContainText("#1 Contractions ending in 're not detected at all");
   await expect(readings.first()).toContainText('71% similar');
   await expect(readings.first().locator('.match-yes')).toHaveText('matched');
   await expect(readings.nth(1)).toContainText('nothing cleared the matching threshold');

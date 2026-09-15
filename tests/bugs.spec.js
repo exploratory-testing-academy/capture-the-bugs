@@ -94,6 +94,43 @@ test.describe('answer key still reproduces', () => {
     expect(r.flagged).toEqual(['is', 'being']);
   });
 
+  // ── Follow-up findings (66-70), from comparing against a from-scratch pass ─
+
+  test("#66 's contractions only ever reach the lower-severity warning", async ({ page }) => {
+    const r = await check(page, "it's, he's, she's, there's, that's, who's");
+    // Correct: six full violations. isn't/aren't, by contrast, are hard-coded
+    // discouraged words and always come back red — the inconsistency is #66.
+    expect(r.red).toBe('0');
+    expect(r.blue).toBe('6');
+    const control = await check(page, "isn't, aren't");
+    expect(control.red).toBe('2');
+  });
+
+  test("#67 let's is flagged despite containing no form of to be", async ({ page }) => {
+    const r = await check(page, "let's go");
+    expect(r.blue).toBe('1');   // correct: 0
+    expect(r.warned).toEqual(["let's"]);
+  });
+
+  test('#68 an acronym spelled like a to-be word is flagged', async ({ page }) => {
+    const r = await check(page, 'AM radio, IS, BE, WAS');
+    expect(r.red).toBe('4');   // correct: 0, none of these are the verb
+    expect(r.flagged).toEqual(['AM', 'IS', 'BE', 'WAS']);
+  });
+
+  test('#69 an underscore splits a word and invents a violation', async ({ page }) => {
+    const r = await check(page, 'was_here');
+    expect(r.red).toBe('1');   // correct: 0, this is one identifier
+    expect(r.flagged).toEqual(['was']);
+  });
+
+  test('#70 a second apostrophe hides a real \'s ending from the check', async ({ page }) => {
+    const r = await check(page, "y'all's");
+    // Correct: flagged as a possible violation, the same as any other 's word.
+    expect(r.blue).toBe('0');
+    expect(r.warned).toEqual([]);
+  });
+
   // ── Pre-existing entries, pinned with the same evidence ───────────────────
 
   test("#1 're contractions are not detected at all", async ({ page }) => {
@@ -160,6 +197,7 @@ test.describe('answer key integrity', () => {
       expect(bug.title, `bug ${bug.id} title`).toBeTruthy();
       expect(bug.category, `bug ${bug.id} category`).toBeTruthy();
       expect(bug.points, `bug ${bug.id} points`).toBeGreaterThan(0);
+      expect(typeof bug.highImpact, `bug ${bug.id} highImpact`).toBe('boolean');
       // matchText is what the model embeds, so a thin one scores badly.
       expect(bug.matchText.length, `bug ${bug.id} matchText`).toBeGreaterThan(80);
       if (bug.inputTriggerable) {

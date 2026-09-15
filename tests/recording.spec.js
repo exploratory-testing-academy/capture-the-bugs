@@ -107,10 +107,11 @@ test.describe('session recording', () => {
     await page.locator('#test-strategy-btn').click();
     // Toggling the open one shut must not read as opening it again.
     await page.locator('#test-strategy-btn').click();
+    await page.locator('#requirements-btn').click();
     await flush(page);
 
     const guidance = posted.filter(e => e.type === 'guidance');
-    expect(guidance.map(e => e.payload.kind)).toEqual(['stories', 'strategy']);
+    expect(guidance.map(e => e.payload.kind)).toEqual(['stories', 'strategy', 'requirements']);
   });
 
   test('records submitted inputs verbatim', async ({ page }) => {
