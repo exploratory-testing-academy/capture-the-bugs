@@ -3,7 +3,6 @@
 - A switch between production and test database to be implemented by some mechanism 
 - input classification would do well classified to positive / negative tests of the application to encourage testing of actual usage flows over all the error handling an app could theoretically need.
 - Time tracking: how long we thing coverage takes vs. how long the person took to do the assignment, and whether their results were following the "in the time used, most important testing got done" -heuristic
-- ask for tip on classes of inputs / results, and track tips needed - to make it less one off on being done. 
 - add possibility for input: 
 test cases as possibility to see how those change people's results
 - Counting the number of bugs and hints towards bugs 

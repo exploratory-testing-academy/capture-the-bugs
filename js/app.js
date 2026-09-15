@@ -606,7 +606,13 @@ document.getElementById('cov-reset').addEventListener('click', () => {
   closeGuidancePanel();
   document.getElementById('give-hint-result').style.display = 'none';
 
+  // Closing the session flushes whatever findings were written under it
+  // before the list is wiped below — the same way clearCapturedInputs() above
+  // only happens after noteReset() has already flushed the inputs.
   endSession();
+  findings = [];
+  addFinding();
+
   startSession(target.meta.id, {
     getInputs: getCapturedInputs,
     getFindings: () => findings,

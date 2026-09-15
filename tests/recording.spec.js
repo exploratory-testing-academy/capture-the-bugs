@@ -207,6 +207,7 @@ test.describe('session recording', () => {
     await open(page, { hints: 'all' });
     await startTarget(page);
     await submitInput(page, 'first\nsecond');
+    await page.locator('.finding-text').first().fill('Words on separate lines glue together.');
     const code = await page.locator('#session-code').textContent();
 
     await page.locator('#cov-reset').click();
@@ -219,6 +220,11 @@ test.describe('session recording', () => {
     expect(inputs(posted)).toHaveLength(1);
     // The old session is explicitly closed out...
     expect(posted.some(e => e.type === 'restart' && e.session_code === code)).toBe(true);
+    // The finding was flushed to the old session before the list was wiped,
+    // the same as the input above.
+    const findingEvent = posted.find(e => e.type === 'finding' && e.session_code === code);
+    expect(findingEvent).toBeTruthy();
+    expect(findingEvent.payload.value).toBe('Words on separate lines glue together.');
     // ...and a fresh one replaces it, under a different code.
     const newCode = await page.locator('#session-code').textContent();
     expect(newCode).toMatch(CODE_SHAPE);
@@ -230,6 +236,12 @@ test.describe('session recording', () => {
     // A tester who leaned on hints for one attempt starts the next one blind.
     expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
     expect(await page.locator('#res-hint-level').inputValue()).toBe('off');
+
+    // The written finding is gone from the UI too, replaced by one blank card.
+    await expect(page.locator('.finding-text')).toHaveCount(1);
+    await expect(page.locator('.finding-text').first()).toHaveValue('');
+    await expect(page.locator('#finding-count')).toHaveText('0 findings');
+    await expect(page.locator('#evaluate-btn')).toBeDisabled();
 
     // And the emptied list is not diffed against the old baseline — it is
     // recorded fresh, against the new session.
