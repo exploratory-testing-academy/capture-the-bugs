@@ -51,44 +51,83 @@
         </div>
 
         <div class="panel panel-reports">
-          <div class="panel-header">
-            <h2>Your Findings</h2>
-            <span id="finding-count">0 findings</span>
-          </div>
-
-          <div id="session-bar" class="session-bar" style="display:none">
-            <span class="session-bar-label">Session</span>
-            <code id="session-code">&mdash;</code>
-            <button id="session-copy" class="btn btn-small" type="button"
-              title="Copy your session name">Copy</button>
-            <span class="session-bar-note">Recorded without your name. Share your session name
-              if you want it reviewed.</span>
-          </div>
-
-          <div id="coverage-live" class="coverage-live">
-            <div class="cov-live-head">
-              <span id="cov-live-msg">Coverage feedback hidden</span>
-              <span class="cov-live-controls">
-                <select id="cov-hint-level" title="How much coverage feedback to show while exploring">
-                  <option value="off">Hints: off</option>
-                  <option value="count">Hints: count</option>
-                  <option value="detail">Hints: detail</option>
-                  <option value="all">Hints: show all</option>
-                </select>
-                <button id="cov-reset" class="cov-reset" type="button"
-                  title="Start a fresh session: discard the inputs captured for this target">Reset</button>
-              </span>
+          <div class="panel-session">
+            <div class="panel-header">
+              <h2>Session</h2>
             </div>
-            <div class="cov-bar" id="cov-bar"><div class="cov-bar-fill" id="cov-live-fill"></div></div>
-            <div id="cov-live-chips" class="cov-chips"></div>
-            <div id="cov-live-list" class="cov-live-list"></div>
+            <div class="session-row">
+              <div id="session-bar" class="session-bar" style="display:none">
+                <code id="session-code">&mdash;</code>
+                <button id="session-copy" class="btn btn-small" type="button"
+                  title="Copy your session name">Copy</button>
+                <span class="session-bar-note">Recorded without your name. Share your session name
+                  if you want it reviewed.</span>
+              </div>
+              <button id="cov-reset" class="cov-reset" type="button"
+                title="Start a fresh session: discard the inputs captured for this target">Reset</button>
+            </div>
           </div>
 
-          <div id="findings-list" class="findings-scroll"></div>
+          <div class="panel-hints">
+            <div class="panel-header">
+              <h2>Hints</h2>
+              <button id="give-hint-btn" class="btn btn-small" type="button"
+                title="Reveal one random input class or bug category to try next">Give me one</button>
+            </div>
 
-          <div class="report-actions">
-            <button id="add-finding-btn" class="btn btn-secondary btn-full">+ Add Finding</button>
-            <button id="evaluate-btn" class="btn btn-primary btn-full" disabled>I'm Done &mdash; Evaluate</button>
+            <div id="give-hint-result" class="give-hint-result" style="display:none"></div>
+
+            <div class="hint-block">
+              <h3 class="hint-block-title">Input hints</h3>
+              <div id="coverage-live" class="coverage-live">
+                <div class="cov-live-head">
+                  <span id="cov-live-msg">Coverage feedback hidden</span>
+                  <span class="cov-live-controls">
+                    <select id="cov-hint-level" title="How much coverage feedback to show while exploring">
+                      <option value="off">Hints: off</option>
+                      <option value="count">Hints: count</option>
+                      <option value="detail">Hints: as discovered</option>
+                      <option value="all">Hints: details</option>
+                    </select>
+                  </span>
+                </div>
+                <div class="cov-bar" id="cov-bar"><div class="cov-bar-fill" id="cov-live-fill"></div></div>
+                <div id="cov-live-chips" class="cov-chips"></div>
+                <div id="cov-live-list" class="cov-live-list"></div>
+              </div>
+            </div>
+
+            <div class="hint-block">
+              <h3 class="hint-block-title">Results hints</h3>
+              <div id="results-hints" class="results-hints">
+                <div class="cov-live-head">
+                  <span id="res-hint-msg">Result hints hidden</span>
+                  <span class="cov-live-controls">
+                    <select id="res-hint-level" title="How much to reveal about the categories of bugs to look for">
+                      <option value="off">Hints: off</option>
+                      <option value="count">Hints: count</option>
+                      <option value="category">Hints: category</option>
+                      <option value="details">Hints: details</option>
+                    </select>
+                  </span>
+                </div>
+                <div id="res-hint-categories" class="res-hint-categories"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-findings">
+            <div class="panel-header">
+              <h2>Your Findings</h2>
+              <span id="finding-count">0 findings</span>
+            </div>
+
+            <div id="findings-list" class="findings-scroll"></div>
+
+            <div class="report-actions">
+              <button id="add-finding-btn" class="btn btn-secondary btn-full">+ Add Finding</button>
+              <button id="evaluate-btn" class="btn btn-primary btn-full" disabled>I'm Done &mdash; Evaluate</button>
+            </div>
           </div>
         </div>
       </div>

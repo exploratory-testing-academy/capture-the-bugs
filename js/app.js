@@ -101,6 +101,7 @@ async function startTarget(meta) {
   // Refresh the live strip as inputs land, plus once now for restored state.
   onCapture(renderLiveCoverage);
   renderLiveCoverage();
+  renderResultHints();
 
   showView('explore');
   if (findings.length === 0) addFinding();
@@ -214,26 +215,38 @@ function renderResults(results) {
 
   const missedEl = document.getElementById('missed-list');
   missedEl.innerHTML = '';
-  const missedByCategory = {};
-  results.missedBugs.forEach(bug => {
-    if (!missedByCategory[bug.category]) missedByCategory[bug.category] = [];
-    missedByCategory[bug.category].push(bug);
-  });
+  for (const [cat, catBugs] of bugsByCategory(results.missedBugs)) {
+    missedEl.appendChild(categoryBlock(cat, catBugs, `${catBugs.length} missed`));
+  }
+}
 
-  Object.entries(missedByCategory).forEach(([cat, catBugs]) => {
-    const section = document.createElement('details');
-    section.className = 'missed-category';
-    section.innerHTML = `
-      <summary>${cat} <span class="missed-count">(${catBugs.length} missed)</span></summary>
-      ${catBugs.map(bug => `
-        <div class="bug-item bug-missed">
-          <span class="bug-id">#${bug.id}</span>
-          <span class="bug-title">${bug.title}</span>
-          <span class="bug-pts">${bug.points} pts</span>
-        </div>`).join('')}
-    `;
-    missedEl.appendChild(section);
-  });
+// Groups bugs by category, preserving the order categories first appear in
+// the answer key. Shared by the post-evaluation "Bugs You Missed" list and
+// the pre-evaluation results hints below.
+function bugsByCategory(bugs) {
+  const byCategory = new Map();
+  for (const bug of bugs) {
+    if (!byCategory.has(bug.category)) byCategory.set(bug.category, []);
+    byCategory.get(bug.category).push(bug);
+  }
+  return byCategory;
+}
+
+// A collapsible category with one row per bug: id, title and points, but
+// never matchText — that stays reserved for the post-run matching itself.
+function categoryBlock(cat, catBugs, countLabel) {
+  const section = document.createElement('details');
+  section.className = 'missed-category';
+  section.innerHTML = `
+    <summary>${escapeHtml(cat)} <span class="missed-count">(${countLabel})</span></summary>
+    ${catBugs.map(bug => `
+      <div class="bug-item bug-missed">
+        <span class="bug-id">#${bug.id}</span>
+        <span class="bug-title">${escapeHtml(bug.title)}</span>
+        <span class="bug-pts">${bug.points} pts</span>
+      </div>`).join('')}
+  `;
+  return section;
 }
 
 // ── Input coverage ───────────────────────────────────────────────────────────
@@ -358,6 +371,113 @@ hintSelect.addEventListener('change', () => {
   hintLevel = hintSelect.value;
   localStorage.setItem('ctb-hint-level', hintLevel);
   renderLiveCoverage();
+});
+
+// ── Results hints ────────────────────────────────────────────────────────────
+// Unlike input hints, there is no exercised/missing split to reveal mid-session:
+// whether a report actually matches a bug is only known once the AI model runs
+// at evaluation time. So this only controls how much of the category breakdown
+// to show, and `details` still withholds matchText — the text that drives
+// matching stays reserved for the post-run report, same as input hints never
+// hand over the `why` behind a class.
+//   off      — nothing
+//   count    — a total across categories, no category names
+//   category — category names and how many bugs sit in each
+//   details  — each category expanded to bug id, title and points
+const RESULT_HINT_LEVELS = ['off', 'count', 'category', 'details'];
+const resHintSelect = document.getElementById('res-hint-level');
+
+function resolveResultHintLevel() {
+  const fromUrl = new URLSearchParams(location.search).get('resultHints');
+  if (RESULT_HINT_LEVELS.includes(fromUrl)) return fromUrl;
+  const stored = localStorage.getItem('ctb-result-hint-level');
+  if (RESULT_HINT_LEVELS.includes(stored)) return stored;
+  return 'count';
+}
+
+let resultHintLevel = resolveResultHintLevel();
+
+function renderResultHints() {
+  const panel = document.getElementById('results-hints');
+  const msg = document.getElementById('res-hint-msg');
+  const list = document.getElementById('res-hint-categories');
+
+  if (!target || target.bugs.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+  resHintSelect.value = resultHintLevel;
+  list.innerHTML = '';
+
+  if (resultHintLevel === 'off') {
+    msg.textContent = 'Result hints hidden';
+    msg.className = 'cov-msg-muted';
+    return;
+  }
+
+  const byCategory = bugsByCategory(target.bugs);
+  msg.className = '';
+  msg.textContent =
+    `There are ${target.bugs.length} bugs across ${byCategory.size} categories waiting to be found.`;
+
+  if (resultHintLevel === 'count') return;
+
+  if (resultHintLevel === 'category') {
+    const chips = document.createElement('div');
+    chips.className = 'res-cat-chips';
+    for (const [cat, catBugs] of byCategory) {
+      const chip = document.createElement('span');
+      chip.className = 'res-cat-chip';
+      chip.textContent = `${cat} (${catBugs.length})`;
+      chips.appendChild(chip);
+    }
+    list.appendChild(chips);
+    return;
+  }
+
+  // 'details'
+  for (const [cat, catBugs] of byCategory) {
+    const label = `${catBugs.length} ${catBugs.length === 1 ? 'bug' : 'bugs'}`;
+    list.appendChild(categoryBlock(cat, catBugs, label));
+  }
+}
+
+resHintSelect.addEventListener('change', () => {
+  resultHintLevel = resHintSelect.value;
+  localStorage.setItem('ctb-result-hint-level', resultHintLevel);
+  renderResultHints();
+});
+
+// ── Give me one ──────────────────────────────────────────────────────────────
+// A single explicit nudge, independent of the ambient hint level above: a coin
+// flip between naming one input class to try and one bug category to look in.
+// Input classes already exercised are worth less as a nudge, so those are
+// skipped while any untried one remains.
+document.getElementById('give-hint-btn').addEventListener('click', () => {
+  if (!target) return;
+  const canInput = target.inputClasses.length > 0;
+  const canBug = target.bugs.length > 0;
+  if (!canInput && !canBug) return;
+
+  const kind = canInput && canBug
+    ? (Math.random() < 0.5 ? 'input' : 'bug')
+    : (canInput ? 'input' : 'bug');
+
+  const box = document.getElementById('give-hint-result');
+  box.style.display = 'block';
+
+  if (kind === 'input') {
+    const cov = computeCoverage(target.inputClasses, getCapturedInputs());
+    const hitIds = new Set(cov.covered.map(c => c.id));
+    const untried = target.inputClasses.filter(c => !hitIds.has(c.id));
+    const pool = untried.length > 0 ? untried : target.inputClasses;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    box.innerHTML = `<span class="give-hint-kind">Input</span>${escapeHtml(pick.label)}`;
+  } else {
+    const bug = target.bugs[Math.floor(Math.random() * target.bugs.length)];
+    box.innerHTML = `<span class="give-hint-kind">Bug category</span>${escapeHtml(bug.category)}`;
+  }
 });
 
 // Captured inputs persist per target, so re-entering a target resumes the old
