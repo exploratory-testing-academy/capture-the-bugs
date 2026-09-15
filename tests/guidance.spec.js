@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openApp, startTarget } from './helpers.js';
+import { openApp, startTarget, submitInput } from './helpers.js';
 
 // Reference material to bring into a session — a simple user-story brief, a
 // test strategy, and a "shall" requirement spec — surfaced as three buttons
@@ -87,5 +87,19 @@ test.describe('guidance', () => {
     await expect(page.locator(content)).not.toContainText('Test strategy for E-Primer');
     await expect(page.locator(strategyBtn)).toHaveAttribute('aria-expanded', 'false');
     await expect(page.locator(requirementsBtn)).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('reset closes an open panel along with everything else', async ({ page }) => {
+    await openApp(page);
+    await startTarget(page);
+    await submitInput(page, 'first\nsecond');
+
+    await page.locator(strategyBtn).click();
+    await expect(page.locator(content)).toBeVisible();
+
+    await page.locator('#cov-reset').click();
+
+    await expect(page.locator(content)).toBeHidden();
+    await expect(page.locator(strategyBtn)).toHaveAttribute('aria-expanded', 'false');
   });
 });

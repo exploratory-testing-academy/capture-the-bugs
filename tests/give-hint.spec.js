@@ -71,4 +71,17 @@ test.describe('give me one', () => {
     await expect(page.locator(result)).toHaveCount(1);
     await expect(page.locator(kind)).toHaveCount(1);
   });
+
+  test('reset hides a revealed hint along with everything else', async ({ page }) => {
+    await pinRandom(page, 0);
+    await openApp(page);
+    await startTarget(page);
+    await submitInput(page, 'first\nsecond');
+
+    await page.locator(btn).click();
+    await expect(page.locator(result)).toBeVisible();
+
+    await page.locator('#cov-reset').click();
+    await expect(page.locator(result)).toBeHidden();
+  });
 });

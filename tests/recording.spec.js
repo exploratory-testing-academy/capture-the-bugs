@@ -202,9 +202,9 @@ test.describe('session recording', () => {
     expect(inputs(posted)).toHaveLength(before);
   });
 
-  test('a reset is recorded and keeps the same session', async ({ page }) => {
+  test('a reset closes the session out and starts a new one', async ({ page }) => {
     const posted = await interceptEvents(page);
-    await open(page);
+    await open(page, { hints: 'all' });
     await startTarget(page);
     await submitInput(page, 'first\nsecond');
     const code = await page.locator('#session-code').textContent();
@@ -217,13 +217,27 @@ test.describe('session recording', () => {
     expect(reset.payload.inputs_discarded).toBe(1);
     // The input was captured before it vanished.
     expect(inputs(posted)).toHaveLength(1);
-    // A reset recounts coverage; it does not start a new session.
-    expect(await page.locator('#session-code').textContent()).toBe(code);
+    // The old session is explicitly closed out...
+    expect(posted.some(e => e.type === 'restart' && e.session_code === code)).toBe(true);
+    // ...and a fresh one replaces it, under a different code.
+    const newCode = await page.locator('#session-code').textContent();
+    expect(newCode).toMatch(CODE_SHAPE);
+    expect(newCode).not.toBe(code);
+    expect(posted.some(e =>
+      e.type === 'session_start' && e.session_code === newCode && e.payload.hint_level === 'off'
+    )).toBe(true);
 
-    // And the emptied list is not diffed against the old baseline.
+    // A tester who leaned on hints for one attempt starts the next one blind.
+    expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
+    expect(await page.locator('#res-hint-level').inputValue()).toBe('off');
+
+    // And the emptied list is not diffed against the old baseline — it is
+    // recorded fresh, against the new session.
     await submitInput(page, 'first \n second');
     await flush(page);
-    expect(inputs(posted).at(-1).payload.value).toBe('first \n second');
+    const last = inputs(posted).at(-1);
+    expect(last.payload.value).toBe('first \n second');
+    expect(last.session_code).toBe(newCode);
   });
 
   test('the code is copyable', async ({ page }) => {

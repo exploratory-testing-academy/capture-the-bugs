@@ -512,8 +512,8 @@ document.getElementById('give-hint-btn').addEventListener('click', () => {
 // so a fourth button is one entry here, not a rewrite of the toggle logic.
 const GUIDANCE_BUTTONS = [
   { kind: 'stories', btn: document.getElementById('user-stories-btn'), data: () => target.userStories },
-  { kind: 'strategy', btn: document.getElementById('test-strategy-btn'), data: () => target.testStrategy },
-  { kind: 'requirements', btn: document.getElementById('requirements-btn'), data: () => target.requirements }
+  { kind: 'requirements', btn: document.getElementById('requirements-btn'), data: () => target.requirements },
+  { kind: 'strategy', btn: document.getElementById('test-strategy-btn'), data: () => target.testStrategy }
 ];
 const guidanceContent = document.getElementById('guidance-content');
 let guidanceShown = null; // null | 'stories' | 'strategy' | 'requirements'
@@ -583,14 +583,35 @@ for (const g of GUIDANCE_BUTTONS) {
 }
 
 // Captured inputs persist per target, so re-entering a target resumes the old
-// session. This is the explicit way to start counting from zero again.
+// session. This is the explicit way to start counting from zero again — and
+// since the point is a genuinely blind reattempt, it goes further than just
+// the inputs: a new session code, and every hint level back to off, so the
+// next attempt cannot lean on hints revealed during the last one.
 document.getElementById('cov-reset').addEventListener('click', () => {
   if (getCapturedInputs().length === 0) return;
   // Record what is about to be discarded before discarding it: how often someone
-  // recounts from zero is itself worth knowing.
+  // recounts from zero is itself worth knowing. Recorded against the session
+  // that is about to close, not the new one.
   noteReset();
   clearCapturedInputs();
+
+  hintLevel = 'off';
+  localStorage.setItem('ctb-hint-level', hintLevel);
+  resultHintLevel = 'off';
+  localStorage.setItem('ctb-result-hint-level', resultHintLevel);
+  closeGuidancePanel();
+  document.getElementById('give-hint-result').style.display = 'none';
+
+  endSession();
+  startSession(target.meta.id, {
+    getInputs: getCapturedInputs,
+    getFindings: () => findings,
+    getHintLevel: () => hintLevel
+  });
+  renderSessionCode();
+
   renderLiveCoverage();
+  renderResultHints();
 });
 
 const COV_BADGE = { hit: '✓', typed: '~', missed: '·', todo: '·' };

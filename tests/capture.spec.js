@@ -89,14 +89,17 @@ test.describe('input capture', () => {
     expect(values).toContain("Hamlet's dilemma");
   });
 
-  test('reset discards captured inputs', async ({ page }) => {
+  test('reset discards captured inputs and turns hints off', async ({ page }) => {
     await submitInput(page, 'to be or not to be');
     expect(await captured(page)).toHaveLength(1);
 
     await page.locator('#cov-reset').click();
 
     expect(await captured(page)).toHaveLength(0);
-    await expect(page.locator('#coverage-live')).toContainText('We expect you to try');
+    // Reset is a blind reattempt: the input-hints level goes back to off, so
+    // the strip shows no coverage feedback rather than a fresh "0 of N" count.
+    await expect(page.locator('#coverage-live')).toContainText('Coverage feedback hidden');
+    expect(await page.locator('#cov-hint-level').inputValue()).toBe('off');
   });
 
   test('capture does not modify the app under test', async ({ page, context }) => {
