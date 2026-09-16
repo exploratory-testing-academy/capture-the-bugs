@@ -1,0 +1,18 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - heading "Capture the Bugs" [level=1] [ref=e6]
+    - paragraph [ref=e7]: Learn how resultful your testing really is
+  - generic [ref=e8]:
+    - heading "How it works" [level=2] [ref=e9]
+    - list [ref=e10]:
+      - listitem [ref=e11]: Pick a target application below
+      - listitem [ref=e12]: Explore it thoroughly — try different inputs, poke around, look at everything
+      - listitem [ref=e13]: For each bug you notice, describe it in the report panel
+      - listitem [ref=e14]: Use hints to support learning if you get stuck
+      - listitem [ref=e15]: When you think you've found everything, submit for evaluation
+    - paragraph [ref=e16]: An AI model running in your browser will match your reports against the known bug list and score your session, so the scoring itself happens on your machine.
+    - paragraph [ref=e17]: Recorded without your name. Share your session name if you want it reviewed.
+  - heading "Choose a target" [level=2] [ref=e18]
+  - button "E-Primer An e-prime checking tool that analyzes text for uses of the verb \"to be\"." [ref=e20] [cursor=pointer]:
+    - strong [ref=e21]: E-Primer
+    - generic [ref=e22]: An e-prime checking tool that analyzes text for uses of the verb "to be".

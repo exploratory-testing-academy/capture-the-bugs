@@ -1,0 +1,87 @@
+- generic [ref=e24]:
+  - generic [ref=e25]:
+    - generic [ref=e26]:
+      - heading "E-Primer" [level=2] [ref=e27]
+      - link "Pop out ↗" [ref=e28] [cursor=pointer]:
+        - /url: targets/eprimer/app/index.html
+    - iframe [ref=e29]:
+      - generic [ref=f2e1]:
+        - img [ref=f2e2]
+        - code [ref=f2e3]:
+          - text: This test target is from collections of
+          - link "Alan Richardson, eviltester" [ref=f2e4] [cursor=pointer]:
+            - /url: https://github.com/eviltester/TestingApp
+          - text: ", a brilliant exploratory tester."
+        - generic [ref=f2e5]:
+          - heading "E-Primer an e-prime checking tool" [level=1] [ref=f2e6]
+          - paragraph [ref=f2e7]: Do you want to write without using the verb "to be"?
+          - paragraph [ref=f2e8]:
+            - text: Do you want to master
+            - link "e-prime" [ref=f2e9] [cursor=pointer]:
+              - /url: http://en.wikipedia.org/wiki/E-Prime
+            - text: "?"
+          - paragraph [ref=f2e10]: Use our online tool to check your writing.
+        - generic [ref=f2e11]:
+          - list [ref=f2e13]:
+            - listitem [ref=f2e14]: "Word Count:"
+            - listitem [ref=f2e15]: "Discouraged Words:"
+            - listitem [ref=f2e16]: "Possible Violations:"
+          - text: "Text:"
+          - textbox "Text:" [ref=f2e17]
+          - button "Check For E-Prime" [ref=f2e18]
+  - generic [ref=e30]:
+    - generic [ref=e31]:
+      - heading "Session" [level=2] [ref=e33]
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - code [ref=e36]: grand-jasper-1563
+          - button "Copy" [ref=e37] [cursor=pointer]
+          - generic [ref=e38]: Recorded without your name. Share your session name if you want it reviewed.
+        - button "Reset" [ref=e39] [cursor=pointer]
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - heading "Hints" [level=2] [ref=e42]
+        - button "Give me one" [ref=e43] [cursor=pointer]
+      - generic [ref=e44]:
+        - heading "Input hints" [level=3] [ref=e45]
+        - generic [ref=e47]:
+          - generic [ref=e48]: We expect you to try 42 kinds of input.
+          - combobox "How much coverage feedback to show while exploring" [ref=e50] [cursor=pointer]:
+            - 'option "Hints: off"'
+            - 'option "Hints: count" [selected]'
+            - 'option "Hints: as discovered"'
+            - 'option "Hints: details"'
+      - generic [ref=e52]:
+        - heading "Results hints" [level=3] [ref=e53]
+        - generic [ref=e55]:
+          - generic [ref=e56]: There are 72 bugs across 19 categories waiting to be found — 34 triggered by specific input, 38 found by observation, 24 of them high impact.
+          - combobox "How much to reveal about the categories of bugs to look for" [ref=e58] [cursor=pointer]:
+            - 'option "Hints: off"'
+            - 'option "Hints: count" [selected]'
+            - 'option "Hints: category"'
+            - 'option "Hints: details"'
+      - generic [ref=e59]:
+        - heading "Guidance" [level=3] [ref=e60]
+        - generic [ref=e61]:
+          - button "User stories" [ref=e62] [cursor=pointer]
+          - button "Requirements" [ref=e63] [cursor=pointer]
+          - button "Test strategy" [ref=e64] [cursor=pointer]
+          - button "Test cases" [ref=e65] [cursor=pointer]
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - heading "Your Findings" [level=2] [ref=e68]
+        - generic [ref=e69]: 1 finding
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]: "#1"
+            - button "×" [ref=e74] [cursor=pointer]
+          - textbox "Describe the bug you found..." [ref=e75]: doesn't scroll
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e78]: "#2"
+            - button "×" [ref=e79] [cursor=pointer]
+          - textbox "Describe the bug you found..." [ref=e80]
+      - generic [ref=e81]:
+        - button "+ Add Finding" [ref=e82] [cursor=pointer]
+        - button "I'm Done — Evaluate" [ref=e83] [cursor=pointer]

@@ -1,0 +1,85 @@
+Curly/smart apostrophe contractions go completely undetected: 'I’m fine and it’s raining.' (U+2019) reports 0 discouraged words and 0 possible violations, while the same text typed with straight apostrophes flags both.
+Other apostrophe-like characters are unrecognised too: itʼs (U+02BC modifier letter apostrophe), it′s (U+2032 prime) and it`s (backtick) are not flagged, although the straight-apostrophe it's is.
+Contractions ending in 're are never detected: "You're late, we're early, they're here." reports 0 discouraged words and 0 possible violations, even though each one contains the to-be form 'are'.
+A to-be word wrapped in single quotes is missed: with input "is" 'is' `is` only two of the three are flagged - the single-quoted one is not, because apostrophes count as word characters so the token becomes 'is' with quotes attached.
+Words separated only by a newline are merged, so the violation disappears: 'The cat<newline>is here.' reports 0 discouraged words and displays the text as 'The catis here.'
+Fifty lines each containing only the word 'is' report 0 discouraged words. Because a newline does not terminate the word being built, all fifty merge into one nonsense token and every violation is lost.
+A zero-width space inside a to-be form hides it: 'i<ZWSP>s here' reports 0 discouraged words, so invisible characters silently defeat the whole check.
+A soft hyphen inside a to-be form hides it: 'i<U+00AD>s here' reports 0 discouraged words.
+Words with two apostrophes ending in 's are not flagged as possible violations: "O'Brien's y'all's don't's" reports 0 possible violations, because only the text after the FIRST apostrophe is compared against the 's ending.
+Acronyms spelled like to-be forms are reported as hard violations: 'AM radio, IS a station, BE Networks, WAS Berlin' reports 4 discouraged words. Matching is case-insensitive with no check for all-caps acronyms.
+Time notation is flagged: 'I woke at 7am and left at 8pm' reports 'am' as a discouraged word, because the digit splits the token and leaves a bare 'am'.
+Hyphenated words are split and falsely flagged: 'well-being self-esteem' reports 'being' as a discouraged word, although 'well-being' is a noun and contains no verb.
+Digits touching letters split the token and create false violations: 'is2be' flags both 'is' and 'be'; 'is1' and '1is' are flagged as well.
+Underscores split tokens and create false violations: 'is_here _is_ snake_case' reports 2 discouraged words, so ordinary identifiers in technical text are flagged.
+Non-ASCII letters split words, producing false violations in other languages: the Finnish text 'isä iso islanti isäntä' reports 2 discouraged words, flagging the 'is' inside 'isä' and 'isäntä'.
+Unicode normalisation is handled inconsistently: precomposed 'isä' is falsely flagged, but the identical word typed with a combining diaeresis ('isa' + U+0308) is not - the same text gives different results depending on how it was encoded.
+'being' used as a noun is reported as a hard violation rather than something needing judgement: 'A human being is a being.' reports 3 discouraged words, though only one is the verb.
+'let's' is flagged as a possible violation even though it contains no form of 'to be' at all - the rule flags every word ending in 's without considering the word.
+A word left pending at the end of a line is emitted AFTER the line break and glued to the next line's first word: 'para one' + two blank lines + 'para two' renders as 'para' / (blank) / (blank) / 'onepara two'. Text moves between lines and words merge, so the output is not what was entered.
+HTML entities typed in the input are decoded in the output instead of shown literally: entering &lt;script&gt; &amp; displays as <script> & . Only < and > are escaped on output and & never is, so the displayed text differs from the text entered.
+Identical text produces different output depending on line-ending convention: with Unix newlines the text renders as 'line' / 'oneline two', while with Windows CR+LF it renders as 'line one' / 'line two' and leaves a stray carriage-return character in the output.
+Blank lines in the input produce empty paragraph elements in the output, so the vertical spacing of the result does not match the input and a run of blank lines becomes a stack of empty boxes.
+Checking an empty input still writes an empty paragraph into the results area, leaving a stray empty grey box rather than nothing at all.
+A single long unbroken word overflows the results box: 300 'a' characters produce content 2434px wide inside a 456px-wide box, so the text spills outside the grey background with no wrapping and no scrollbar on the box.
+Clean text produces no confirmation message - only three zeros. Nothing distinguishes 'I checked your text and found nothing' from 'the check did not run'.
+Newlines are not treated as word separators: 'line one / line two / line three' on three lines reports 4 words instead of 6.
+Tabs are not treated as word separators: four tab-separated words report a word count of 1 instead of 4.
+Non-breaking spaces are not treated as word separators: four words joined by U+00A0 report a word count of 1 instead of 4.
+Vertical tab and form feed are not treated as word separators either: 'a<VT>b<FF>c is here' reports 3 words instead of 4.
+A lone newline counts as a word: an input consisting of a single newline reports Word Count 1 for text containing no words at all.
+A lone tab counts as a word: an input consisting of a single tab character reports Word Count 1.
+Whitespace containing newlines is counted as words: an input of space-newline-space-newline-space reports 2 words although it contains none.
+Punctuation-only tokens are counted as words: '... !!! ??? ---' reports 4 words.
+The word count can be smaller than the discouraged-word count: 'is,is,is,is' reports Word Count 1 and Discouraged Words 4. The two figures shown side by side contradict each other.
+Only the space character separates words, so the figure labelled 'Word Count' is really a count of runs of non-space characters - a URL, an email address or a whole comma-separated list each count as one word.
+The page container uses position:fixed, so the page cannot scroll at all. After checking a 660-word text the content is 1327px tall in an 1127px viewport, scrolling has no effect, and the input box and Check button sit below the fold where they cannot be reached - the user is locked out of the tool by their own results.
+The results are rendered ABOVE the input field, so the longer the checked text, the further the textarea and the Check button are pushed off the bottom of the screen. Results and the control that produces them should not fight each other for the same space.
+The container has a hard-coded width of 600px with left:10%, so on a 390px-wide viewport the right-hand side of the content is cut off and, because the container is fixed, there is no horizontal scrolling to reach it. The textarea alone is 504px wide and runs off the screen.
+There is no viewport meta tag, so mobile browsers lay the page out at desktop width and scale it down, leaving the text unreadably small.
+The results box carries margin-right:20% for no evident reason, so results are squeezed into a narrower column than everything else on the page and wrap much earlier than they need to.
+The h1 rule sets 'font-size: 60' with no unit. The declaration is invalid and dropped, so the heading renders at the browser default 32px and the intended design never appears.
+The html rule sets 'font-size: 20' with no unit. It too is invalid and dropped, so the intended base font size for the whole page never applies.
+The base font stack is 'Lato', cursive - a cursive fallback for body text. If the Google font fails to load (offline, blocked, or slow) the entire application renders in a cursive typeface.
+The page pulls its fonts from a third-party Google Fonts stylesheet, so its appearance depends on an external service and every visit makes a request to it.
+Hard violations and possible violations are distinguished by colour alone - red versus blue, same weight, no underline, no icon, no text label. Anyone who cannot separate those two colours cannot separate the two categories, which is the whole point of the tool.
+Red and blue are a poor pairing for the most common colour-vision deficiencies, and because no other cue exists there is nothing to fall back on.
+Red text (#FF0000) on the grey (#808080) results background gives roughly 2:1 contrast, far short of the 4.5:1 WCAG AA minimum; the blue possible-violation colour on the same grey is worse. The flagged words are the hardest text on the page to read.
+There is no aria-live region anywhere on the page, so completing a check silently replaces the results and the three counts. A screen-reader user gets no notification that the check finished or what it found.
+The results area is an anonymous div with no heading and no accessible name, so a screen-reader user has no way to locate the results or to know where they begin and end.
+Nothing on the page explains what 'Discouraged Words' and 'Possible Violations' mean or how they differ, so the user cannot tell which flags are certain and which need their own judgement.
+Before the first check the three statistics render as bare labels with no values - 'Word Count:' followed by nothing - instead of showing 0.
+The image at the top of the page has no alt attribute, so assistive technology reads out the file name or nothing at all.
+The controls are not wrapped in a form and there is no keyboard shortcut: pressing Enter in the textarea just inserts a newline, so the only way to run a check is to Tab to the button. A one-control tool should be operable without leaving the keyboard home position.
+The DOM order places the results before the input, so keyboard and screen-reader users encounter the output before the control that produces it - the reading order tells the story backwards.
+Results only refresh when the button is clicked, so as soon as the text is edited the displayed highlights and counts describe the PREVIOUS text with nothing to mark them as out of date. The user can read a clean result for text that is full of violations.
+There is no way to clear the input or reset the results - no clear button, no reset - so the only way to start over is to select the text by hand and delete it.
+The document declares no character encoding: there is no meta charset element, so correct display of accented and non-Latin text depends entirely on the server sending the right Content-Type header. Saved or served differently, the same page shows mojibake.
+The source document has no closing </html> tag; the browser has to repair the markup.
+There is whitespace before the <!DOCTYPE html> declaration, which risks tipping older browsers into quirks mode.
+The image uses the presentational HTML attribute width="100%" instead of CSS, mixing layout into the markup.
+The document title says 'Eprimer - e-prime checking tool' while the heading says 'E-Primer', so the product calls itself two different names on one page.
+All analysis state lives in mutable page-level globals (wordCount, outputText, discouragedWordCount, processingWord, currChar), and the character loop variable 'c' is assigned without declaration so it leaks as an implicit global too. Any other script on the page can silently corrupt a check.
+Results are written with innerHTML after hand-rolled escaping of only < and >, so every other markup-significant character - notably & - passes through unescaped. Escaping a fixed pair of characters by hand is the wrong shape of solution for this problem.
+checkThisTextForEprime builds and returns the output string, but the caller throws the return value away and reads a global variable instead, so the function's interface lies about how it is used.
+isDiscouragedWord rebuilds its entire dictionary with 'new Array()' on every single word it checks - a fresh allocation per word - and uses an Array as a string-keyed map, which relies on array-index semantics for something that should be a plain object or a Set.
+The check is wired up with an inline onclick attribute in the markup rather than a registered event listener.
+The page never explains the e-prime rule or what to do about a flagged word - it just links out to Wikipedia, so a user who does not already know e-prime learns nothing from the tool they are using.
+The heading 'E-Primer an e-prime checking tool' reads ungrammatically; it is missing the punctuation that would make it a sentence.
+The discouraged word list is arbitrary: it includes the non-standard dialect form "amn't" while omitting genuinely common contractions such as "you're", "we're" and "they're". The list looks assembled rather than derived from the grammar it claims to check.
+The tool reports how many violations exist but gives no sense of progress or of how much rewriting remains, which is the thing a writer actually wants from it.
+Nothing shows which tokens were counted as words, so when the word count disagrees with the user's own count there is no way to see why.
+Highlighted words carry no tooltip, no explanation and no suggested rewrite, so the user learns that a word breaks the rule but never why or what to write instead.
+Fifty lines each containing only the word 'is' report 0 discouraged words. Because a newline does not terminate the word being built, all fifty merge into one nonsense token and every violation is lost.
+A zero-width space inside a to-be form hides it: 'i<ZWSP>s here' reports 0 discouraged words, so invisible characters silently defeat the whole check.
+A soft hyphen inside a to-be form hides it: 'i<U+00AD>s here' reports 0 discouraged words.
+Words with two apostrophes ending in 's are not flagged as possible violations: "O'Brien's y'all's don't's" reports 0 possible violations, because only the text after the FIRST apostrophe is compared against the 's ending.
+Acronyms spelled like to-be forms are reported as hard violations: 'AM radio, IS a station, BE Networks, WAS Berlin' reports 4 discouraged words. Matching is case-insensitive with no check for all-caps acronyms.
+Time notation is flagged: 'I woke at 7am and left at 8pm' reports 'am' as a discouraged word, because the digit splits the token and leaves a bare 'am'.
+Hyphenated words are split and falsely flagged: 'well-being self-esteem' reports 'being' as a discouraged word, although 'well-being' is a noun and contains no verb.
+Digits touching letters split the token and create false violations: 'is2be' flags both 'is' and 'be'; 'is1' and '1is' are flagged as well.
+Underscores split tokens and create false violations: 'is_here _is_ snake_case' reports 2 discouraged words, so ordinary identifiers in technical text are flagged.
+Non-ASCII letters split words, producing false violations in other languages: the Finnish text 'isä iso islanti isäntä' reports 2 discouraged words, flagging the 'is' inside 'isä' and 'isäntä'.
+Unicode normalisation is handled inconsistently: precomposed 'isä' is falsely flagged, but the identical word typed with a combining diaeresis ('isa' + U+0308) is not - the same text gives different results depending on how it was encoded.
+'being' used as a noun is reported as a hard violation rather than something needing judgement: 'A human being is a being.' reports 3 discouraged words, though only one is the verb.
+'let's' is flagged as a possible violation even though it contains no form of 'to be' at all - the rule flags every word ending in 's without considering the word.

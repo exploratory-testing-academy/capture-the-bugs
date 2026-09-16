@@ -1,0 +1,58 @@
+- generic [ref=e25]:
+  - generic [ref=e26]:
+    - generic [ref=e27]:
+      - heading "E-Primer" [level=2] [ref=e28]
+      - link "Pop out ↗" [ref=e29] [cursor=pointer]:
+        - /url: targets/eprimer/app/index.html
+    - iframe [ref=e30]:
+      
+  - generic [ref=e31]:
+    - generic [ref=e32]:
+      - heading "Session" [level=2] [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - code [ref=e37]: grand-jasper-1563
+          - button "Copy" [ref=e38] [cursor=pointer]
+          - generic [ref=e39]: Recorded without your name. Share your session name if you want it reviewed.
+        - button "Reset" [ref=e40] [cursor=pointer]
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - heading "Hints" [level=2] [ref=e43]
+        - button "Give me one" [ref=e44] [cursor=pointer]
+      - generic [ref=e45]:
+        - heading "Input hints" [level=3] [ref=e46]
+        - generic [ref=e48]:
+          - generic [ref=e49]: We expect you to try 42 kinds of input.
+          - combobox "How much coverage feedback to show while exploring" [ref=e51] [cursor=pointer]:
+            - 'option "Hints: off"'
+            - 'option "Hints: count" [selected]'
+            - 'option "Hints: as discovered"'
+            - 'option "Hints: details"'
+      - generic [ref=e53]:
+        - heading "Results hints" [level=3] [ref=e54]
+        - generic [ref=e56]:
+          - generic [ref=e57]: There are 72 bugs across 19 categories waiting to be found — 34 triggered by specific input, 38 found by observation, 24 of them high impact.
+          - combobox "How much to reveal about the categories of bugs to look for" [ref=e59] [cursor=pointer]:
+            - 'option "Hints: off"'
+            - 'option "Hints: count" [selected]'
+            - 'option "Hints: category"'
+            - 'option "Hints: details"'
+      - generic [ref=e60]:
+        - heading "Guidance" [level=3] [ref=e61]
+        - generic [ref=e62]:
+          - button "User stories" [ref=e63] [cursor=pointer]
+          - button "Requirements" [ref=e64] [cursor=pointer]
+          - button "Test strategy" [ref=e65] [cursor=pointer]
+          - button "Test cases" [ref=e66] [cursor=pointer]
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - heading "Your Findings" [level=2] [ref=e69]
+        - generic [ref=e70]: 0 findings
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]: "#1"
+          - button "×" [ref=e75] [cursor=pointer]
+        - textbox "Describe the bug you found..." [active] [ref=e76]
+      - generic [ref=e77]:
+        - button "+ Add Finding" [ref=e78] [cursor=pointer]
+        - button "I'm Done — Evaluate" [disabled] [ref=e79]
