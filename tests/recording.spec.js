@@ -32,6 +32,9 @@ async function open(page, { record = 'on', hints = null } = {}) {
   const qs = params.toString();
   await page.goto(qs ? `/index.html?${qs}` : '/index.html');
   await expect(page.locator('#target-list .target-card')).toHaveCount(1);
+  // Reset confirms before discarding captured inputs; these tests exercise
+  // the discard itself, not the confirmation prompt, so accept it by default.
+  page.on('dialog', d => d.accept());
 }
 
 // The flush interval is ten seconds; ask for one instead of waiting.

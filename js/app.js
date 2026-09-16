@@ -600,7 +600,14 @@ for (const g of GUIDANCE_BUTTONS) {
 // discard-and-log step is conditional on there being something to discard.
 document.getElementById('cov-reset').addEventListener('click', () => {
   if (!target) return;
-  if (getCapturedInputs().length > 0) {
+  const hasCaptured = getCapturedInputs().length > 0;
+  if (hasCaptured && !confirm(
+    'Start a fresh session? This discards the inputs captured so far for this ' +
+    'target, mints a new session code, and turns all hints off.'
+  )) {
+    return;
+  }
+  if (hasCaptured) {
     // Record what is about to be discarded before discarding it: how often
     // someone recounts from zero is itself worth knowing. Recorded against
     // the session that is about to close, not the new one.

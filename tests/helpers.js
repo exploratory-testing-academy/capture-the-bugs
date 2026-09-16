@@ -17,6 +17,9 @@ export async function openApp(page, { hints = null } = {}) {
   const query = hints ? `?hints=${hints}` : '';
   await page.goto(`/index.html${query}`);
   await expect(page.locator('#target-list .target-card')).toHaveCount(1);
+  // Reset confirms before discarding captured inputs; tests exercise the
+  // discard itself, not the confirmation prompt, so accept it by default.
+  page.on('dialog', d => d.accept());
 }
 
 export async function startTarget(page) {
