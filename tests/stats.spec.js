@@ -91,6 +91,9 @@ test('summarises every recorded session', async ({ page }) => {
   await expect(page.locator('#stat-findings')).toHaveText('1.5');
   await expect(page.locator('#stat-matched')).toHaveText('2.0');
   await expect(page.locator('#stat-total-bugs')).toHaveText('72');
+  // Only the scored session carries a coverage_percent (11); the unscored
+  // one is null and must not drag the average down as if it were 0.
+  await expect(page.locator('#stat-coverage')).toHaveText('11%');
 });
 
 test('defaults to all time, then filters down to sessions started today', async ({ page }) => {
@@ -398,6 +401,7 @@ test('copes with no sessions at all', async ({ page }) => {
 
   await expect(page.locator('#stat-sessions')).toHaveText('0');
   await expect(page.locator('#stat-submitted')).toHaveText('—');
+  await expect(page.locator('#stat-coverage')).toHaveText('0%');
   // With no target in the data there is no answer key to rate against.
   await expect(page.locator('#session-stats .empty-state')).toHaveText('Nothing recorded yet.');
   await expect(page.locator('#bug-stats .empty-state')).toBeVisible();

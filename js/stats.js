@@ -533,6 +533,10 @@ export function render(sessions, keysByTarget) {
     : 0;
   document.getElementById('stat-matched').textContent = avgMatched.toFixed(1);
   document.getElementById('stat-total-bugs').textContent = String(totalBugs);
+  const avgCoverage = scored.length
+    ? scored.reduce((n, s) => n + Number(s.coverage_percent || 0), 0) / scored.length
+    : 0;
+  document.getElementById('stat-coverage').textContent = `${Math.round(avgCoverage)}%`;
 
   const bugRows = [];
   const classRows = [];

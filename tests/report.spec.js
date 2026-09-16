@@ -15,11 +15,9 @@ test.describe('coverage in the report', () => {
     await submitInput(page, "you're late");
     await preview(page);
 
-    const { coveredCount, totalCount } =
-      await page.evaluate(() => window.__ctb.coverage());
+    const { percent } = await page.evaluate(() => window.__ctb.coverage());
     await expect(page.locator('#coverage-section')).toBeVisible();
-    await expect(page.locator('#score-classes')).toHaveText(String(coveredCount));
-    await expect(page.locator('#score-total-classes')).toHaveText(String(totalCount));
+    await expect(page.locator('#score-classes-pct')).toHaveText(`${percent}%`);
   });
 
   test('groups exercised, typed-only and never-tried classes', async ({ page }) => {

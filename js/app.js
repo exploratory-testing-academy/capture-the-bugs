@@ -193,6 +193,7 @@ function addFinding() {
 function renderResults(results) {
   document.getElementById('score-found').textContent = results.matchedCount;
   document.getElementById('score-total').textContent = results.totalCount;
+  document.getElementById('score-reports').textContent = results.reportDetails.length;
   document.getElementById('score-points').textContent = results.earnedPoints;
   document.getElementById('score-total-points').textContent = target.totalPoints;
 
@@ -739,8 +740,7 @@ function renderCoverage(cov) {
   section.style.display = 'block';
   block.style.display = 'block';
 
-  document.getElementById('score-classes').textContent = cov.coveredCount;
-  document.getElementById('score-total-classes').textContent = cov.totalCount;
+  document.getElementById('score-classes-pct').textContent = `${cov.percent}%`;
 
   const list = document.getElementById('coverage-list');
   list.innerHTML = '';
@@ -940,9 +940,10 @@ window.__ctb = {
     return 'Session closed.';
   },
 
-  // Records an evaluation using the target's own answer key, skipping the model
-  // download — companion to previewCoverage, and the same trade: this exercises
-  // the results-to-payload mapping, not the matching that produces the results.
+  // Renders and records an evaluation using the target's own answer key,
+  // skipping the model download — companion to previewCoverage, and the same
+  // trade: this exercises the results-to-DOM and results-to-payload mapping,
+  // not the matching that produces the results.
   previewEvaluation() {
     if (!target) return 'Pick a target first.';
     showView('results');
@@ -960,6 +961,7 @@ window.__ctb = {
       matchedCount: matchedBugs.length,
       totalCount: target.bugs.length
     };
+    renderResults(results);
     noteEvaluation(results, computeCoverage(target.inputClasses, getCapturedInputs()));
     renderSessionResults();
     return results;

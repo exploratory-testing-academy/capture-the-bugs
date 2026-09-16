@@ -176,6 +176,9 @@ test.describe('session recording', () => {
     expect(evaluated.payload.report_matches).toHaveLength(1);
     expect(evaluated.payload.report_matches[0].score).toBeCloseTo(0.7123);
 
+    // One finding written, one report counted on the scorecard.
+    await expect(page.locator('#score-reports')).toHaveText('1');
+
     const code = await page.locator('#session-code').textContent();
     await expect(page.locator('#session-section')).toBeVisible();
     await expect(page.locator('#results-session-code')).toHaveText(code);
