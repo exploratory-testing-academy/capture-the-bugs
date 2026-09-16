@@ -484,7 +484,8 @@ function hintLevelRow(level, sessions) {
 const GUIDANCE_KINDS = [
   { key: 'used_user_stories', label: 'User stories' },
   { key: 'used_test_strategy', label: 'Test strategy' },
-  { key: 'used_requirements', label: 'Requirements' }
+  { key: 'used_requirements', label: 'Requirements' },
+  { key: 'used_test_cases', label: 'Test cases' }
 ];
 
 function guidanceHeading(text) {

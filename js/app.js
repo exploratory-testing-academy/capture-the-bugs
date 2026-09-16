@@ -86,6 +86,11 @@ async function startTarget(meta) {
     const mod = await import(`../${meta.requirementsModule}`);
     requirements = mod.requirements;
   }
+  let testCases = null;
+  if (meta.testCasesModule) {
+    const mod = await import(`../${meta.testCasesModule}`);
+    testCases = mod.testCases;
+  }
 
   target = {
     meta,
@@ -94,7 +99,8 @@ async function startTarget(meta) {
     inputClasses,
     userStories,
     testStrategy,
-    requirements
+    requirements,
+    testCases
   };
 
   // Restore findings for this target
@@ -515,10 +521,11 @@ document.getElementById('give-hint-btn').addEventListener('click', () => {
 const GUIDANCE_BUTTONS = [
   { kind: 'stories', btn: document.getElementById('user-stories-btn'), data: () => target.userStories },
   { kind: 'requirements', btn: document.getElementById('requirements-btn'), data: () => target.requirements },
-  { kind: 'strategy', btn: document.getElementById('test-strategy-btn'), data: () => target.testStrategy }
+  { kind: 'strategy', btn: document.getElementById('test-strategy-btn'), data: () => target.testStrategy },
+  { kind: 'cases', btn: document.getElementById('test-cases-btn'), data: () => target.testCases }
 ];
 const guidanceContent = document.getElementById('guidance-content');
-let guidanceShown = null; // null | 'stories' | 'strategy' | 'requirements'
+let guidanceShown = null; // null | 'stories' | 'strategy' | 'requirements' | 'cases'
 
 function closeGuidancePanel() {
   guidanceShown = null;

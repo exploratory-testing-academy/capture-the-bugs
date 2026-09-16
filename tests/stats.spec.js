@@ -164,19 +164,20 @@ test('breaks down results by the hint level in effect', async ({ page }) => {
 
 test('breaks down results by whether guidance was opened', async ({ page }) => {
   const summaries = [
-    { ...SUMMARIES[0], used_user_stories: true, used_test_strategy: false, used_requirements: true },
-    { ...SUMMARIES[1], used_user_stories: false, used_test_strategy: true, used_requirements: false }
+    { ...SUMMARIES[0], used_user_stories: true, used_test_strategy: false, used_requirements: true, used_test_cases: true },
+    { ...SUMMARIES[1], used_user_stories: false, used_test_strategy: true, used_requirements: false, used_test_cases: false }
   ];
   await openStats(page, { summaries });
 
   const headings = page.locator('#guidance-stats .cov-group');
-  await expect(headings).toHaveCount(3);
+  await expect(headings).toHaveCount(4);
   await expect(headings.first()).toHaveText('User stories');
   await expect(headings.nth(1)).toHaveText('Test strategy');
   await expect(headings.nth(2)).toHaveText('Requirements');
+  await expect(headings.nth(3)).toHaveText('Test cases');
 
   const rows = page.locator('#guidance-stats .hint-level-row');
-  await expect(rows).toHaveCount(6);
+  await expect(rows).toHaveCount(8);
 
   // User stories: opened by keen-ember (submitted, matched 2), not by quiet-otter.
   await expect(rows.nth(0).locator('.hint-level-name')).toHaveText('Opened');
@@ -202,6 +203,12 @@ test('breaks down results by whether guidance was opened', async ({ page }) => {
   await expect(rows.nth(4).locator('.hint-stat').nth(0)).toContainText('1');
   await expect(rows.nth(5).locator('.hint-level-name')).toHaveText('Not opened');
   await expect(rows.nth(5).locator('.hint-stat').nth(1)).toContainText('0%');
+
+  // Test cases: same split as user stories and requirements.
+  await expect(rows.nth(6).locator('.hint-level-name')).toHaveText('Opened');
+  await expect(rows.nth(6).locator('.hint-stat').nth(0)).toContainText('1');
+  await expect(rows.nth(7).locator('.hint-level-name')).toHaveText('Not opened');
+  await expect(rows.nth(7).locator('.hint-stat').nth(1)).toContainText('0%');
 });
 
 test('rates every bug against the sessions that were scored', async ({ page }) => {

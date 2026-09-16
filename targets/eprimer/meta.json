@@ -8,6 +8,7 @@
   "userStoriesModule": "targets/eprimer/userStories.js",
   "testStrategyModule": "targets/eprimer/testStrategy.js",
   "requirementsModule": "targets/eprimer/requirements.js",
+  "testCasesModule": "targets/eprimer/testCases.js",
   "sourceUrl": "https://maaretp.com/app/",
   "attribution": "Test target from collections of Alan Richardson (eviltester)"
 }
