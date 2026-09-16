@@ -287,6 +287,9 @@ h2 {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+.guidance-links .btn {
+  font-size: 0.64rem; /* 20% smaller than .btn-small's 0.8rem */
+}
 .guidance-content {
   margin-top: 0.6rem;
   padding: 0.6rem 0.75rem;
