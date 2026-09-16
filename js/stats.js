@@ -534,6 +534,22 @@ export function render(sessions, keysByTarget) {
     : 0;
   document.getElementById('stat-matched').textContent = avgMatched.toFixed(1);
   document.getElementById('stat-total-bugs').textContent = String(totalBugs);
+  // Rate is per-session, against that session's own target's bug count, since
+  // targets can define different numbers of bugs and a global total would
+  // misrepresent the rate wherever multiple targets are mixed into one view.
+  const targetBugTotals = new Map([...keysByTarget].map(([id, k]) => [id, k.bugs.length]));
+  const matchRates = scored
+    .map(s => {
+      const total = targetBugTotals.get(s.target_id) || 0;
+      return total ? Number(s.best_matched || 0) / total : null;
+    })
+    .filter(r => r !== null);
+  const avgMatchRate = matchRates.length
+    ? matchRates.reduce((a, b) => a + b, 0) / matchRates.length
+    : 0;
+  document.getElementById('stat-match-rate').textContent = pct(avgMatchRate);
+  const bestMatchRate = matchRates.length ? Math.max(...matchRates) : 0;
+  document.getElementById('stat-match-rate-best').textContent = pct(bestMatchRate);
   const avgCoverage = scored.length
     ? scored.reduce((n, s) => n + Number(s.coverage_percent || 0), 0) / scored.length
     : 0;
