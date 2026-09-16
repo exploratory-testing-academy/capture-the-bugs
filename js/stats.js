@@ -317,7 +317,7 @@ function sessionRow(s, bugsById) {
   meta.className = 'missed-count';
   const bits = [duration(s.elapsedMs), count(s.findings.length, 'finding')];
   if (s.inputs.length > 0) bits.push(count(s.inputs.length, 'input'));
-  bits.push(s.submitted ? `${s.best_matched ?? 0} matched` : 'not submitted');
+  bits.push(s.submitted ? `${s.best_matched ?? 0} matched` : 'not submitted for scoring');
   if (s.restarted) bits.push('restarted');
   meta.textContent = `(${bits.join(' · ')})`;
 
@@ -363,12 +363,12 @@ function sessionRow(s, bugsById) {
   if (s.inputs.length > 0) {
     group(body, 'Inputs tried', s.inputs.length);
     for (const inp of s.inputs) {
-      body.appendChild(valueBlock(visible(inp.value), '(submitted empty)'));
+      body.appendChild(valueBlock(visible(inp.value), '(committed empty)'));
       const note = document.createElement('div');
       note.className = 'stat-interp';
       const badge = document.createElement('span');
       badge.className = `match-badge ${inp.committed ? 'match-yes' : 'match-no'}`;
-      badge.textContent = inp.committed ? 'submitted' : 'typed, not submitted';
+      badge.textContent = inp.committed ? 'committed' : 'typed, not committed';
       note.appendChild(badge);
       if (inp.clipped) {
         const c = document.createElement('span');
@@ -464,7 +464,7 @@ function labeledStatsRow(label, sessions) {
   wrap.className = 'hint-level-stats';
   wrap.append(
     statPair(String(stats.n), 'sessions'),
-    statPair(stats.submittedRate == null ? '—' : pct(stats.submittedRate), 'submitted'),
+    statPair(stats.submittedRate == null ? '—' : pct(stats.submittedRate), 'submitted for scoring'),
     statPair(stats.avgFindings == null ? '—' : stats.avgFindings.toFixed(1), 'findings, avg'),
     statPair(stats.avgMatched == null ? '—' : stats.avgMatched.toFixed(1), 'bugs matched, avg'),
     statPair(stats.avgCoverage == null ? '—' : `${Math.round(stats.avgCoverage)}%`, 'coverage, avg')
@@ -538,6 +538,10 @@ export function render(sessions, keysByTarget) {
     ? scored.reduce((n, s) => n + Number(s.coverage_percent || 0), 0) / scored.length
     : 0;
   document.getElementById('stat-coverage').textContent = `${Math.round(avgCoverage)}%`;
+  const bestCoverage = scored.length
+    ? Math.max(...scored.map(s => Number(s.coverage_percent || 0)))
+    : 0;
+  document.getElementById('stat-coverage-best').textContent = `${Math.round(bestCoverage)}%`;
 
   const bugRows = [];
   const classRows = [];

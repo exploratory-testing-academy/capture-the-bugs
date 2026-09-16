@@ -459,6 +459,15 @@ h2 {
   font-size: 0.85rem;
   color: #666;
 }
+.score-sub {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+.score-sub span {
+  font-weight: 600;
+  color: #2563eb;
+}
 
 /* ── Result sections ───────────────────────────────────────────────────────── */
 .result-section {

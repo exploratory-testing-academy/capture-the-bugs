@@ -19,3 +19,8 @@ Examples for:
 1. `There is no problem with the word count` -> This matches 5 points, when it shouldn't. But at this string 2 times as 2 findings and it matches 6 points. So this catches bugs #10,#11,#12,#13,#14 + #62 on the second finding
 2. And the other is if you add this as 1 word per finding (18) you get 51% coverage: apostrophe, separated words, violations, contrast, whitespace, validation, decoded, quotes, context, possessive, newlines, font, ctrl, textarea, disabled, txt, digit, links open
 
+I reported these but they weren't match: 
+#7: In-app instructions on page are not as per common convention
+#15: Wikipedia link: target="_blank" rel="nofollow" — missing noopener/noreferrer, a textbook reverse-tabnabbing gap.
+#22: The app is missing a functionality to empty the fields
+#25: bride-to-be should not be flagged as discouraged word

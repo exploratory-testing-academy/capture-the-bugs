@@ -44,11 +44,12 @@
             </div>
             <div class="score-block">
               <div class="score-big" id="stat-matched">0</div>
-              <div class="score-label">of <span id="stat-total-bugs">0</span> bugs matched</div>
+              <div class="score-label">of <span id="stat-total-bugs">0</span> bugs matched, on average &mdash; among sessions submitted for scoring</div>
             </div>
             <div class="score-block">
               <div class="score-big" id="stat-coverage">0%</div>
-              <div class="score-label">of input types covered, on average</div>
+              <div class="score-label">of input types covered, on average &mdash; among sessions submitted for scoring</div>
+              <div class="score-sub">best: <span id="stat-coverage-best">0%</span></div>
             </div>
           </div>
         </div>
@@ -64,7 +65,7 @@
         <div class="result-section">
           <h2>Which Input Classes Get Tried</h2>
           <p class="hint">Share of scored sessions that put each class of input through the
-            app. Only classes actually submitted count &mdash; a class typed but never
+            app. Only classes actually committed count &mdash; a class typed but never
             committed is not recorded, so this cannot tell the two apart.</p>
           <div id="class-stats"></div>
         </div>
