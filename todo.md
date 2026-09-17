@@ -24,3 +24,6 @@ I reported these but they weren't match:
 #15: Wikipedia link: target="_blank" rel="nofollow" — missing noopener/noreferrer, a textbook reverse-tabnabbing gap.
 #22: The app is missing a functionality to empty the fields
 #25: bride-to-be should not be flagged as discouraged word
+
+
+Confidence level visible, do we think it is a bug or not - classification on feedback on features vs. actual bugs, vs. actual bugs that the spec really mentions. 

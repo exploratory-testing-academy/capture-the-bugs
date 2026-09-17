@@ -196,6 +196,36 @@ function addFinding() {
 }
 
 // ── Results rendering ────────────────────────────────────────────────────────
+
+// Bugs carry a `confidence` field classifying how certain the answer key is
+// that this is actually a bug, checked against requirements/userStories. Only
+// 'specification' bugs are unambiguous requirement violations — see the note
+// in targets/eprimer/bugs.js for the (deliberately strict) bar that separates
+// it from 'interpretation':
+//   specification  — a requirement or user story names this exact scenario
+//   interpretation — a reasonable expectation, but not unambiguously in the spec
+//   feedback       — everything else the spec gives no basis to expect
+const CONFIDENCE_INFO = {
+  specification: {
+    label: 'Per specification',
+    title: 'A requirement or user story names this exact scenario, unambiguously.'
+  },
+  interpretation: {
+    label: 'Per interpretation',
+    title: 'A reasonable expectation of correct behaviour, but not unambiguously stated in the spec.'
+  },
+  feedback: {
+    label: 'Feedback',
+    title: 'Not led to by the spec — a cosmetic opinion, missing convenience, or hygiene issue.'
+  }
+};
+
+function bugConfidenceBadge(confidence) {
+  const info = CONFIDENCE_INFO[confidence];
+  if (!info) return '';
+  return `<span class="confidence-badge confidence-${confidence}" title="${escapeHtml(info.title)}">${info.label}</span>`;
+}
+
 function renderResults(results) {
   document.getElementById('score-found').textContent = results.matchedCount;
   document.getElementById('score-total').textContent = results.totalCount;
@@ -217,9 +247,10 @@ function renderResults(results) {
       ? `<span class="match-badge match-yes">Bug #${rd.topMatch.bug.id}: ${rd.topMatch.bug.title}
            <span class="confidence">${Math.round(rd.topMatch.score * 100)}% match</span></span>`
       : `<span class="match-badge match-no">No confident match</span>`;
+    const bugConfidenceHtml = rd.topMatch ? bugConfidenceBadge(rd.topMatch.bug.confidence) : '';
     div.innerHTML = `
       <div class="report-text"><strong>#${i + 1}:</strong> ${escapeHtml(rd.report)}</div>
-      <div class="report-match">${matchHtml}</div>
+      <div class="report-match">${matchHtml}${bugConfidenceHtml}</div>
     `;
     detailsEl.appendChild(div);
   });

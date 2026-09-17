@@ -2,6 +2,20 @@
 // optimized for semantic similarity matching against free-text user reports.
 // For input-triggerable bugs, `triggerPattern` describes the CLASS of inputs that trigger it.
 //
+// `confidence` classifies how certain we are that this is actually a bug, checked
+// against requirements.js and userStories.js. We only pay out on bugs that are
+// against specification, so the bar for that bucket is a requirement naming the
+// exact scenario with no reading-between-the-lines — anything that needs an
+// inferential leap to connect to the spec text belongs in 'interpretation', not
+// 'specification', however plausible the leap:
+//   'specification'  — an explicit "shall" statement or user story names this
+//                       exact scenario, unambiguously, with no inference needed.
+//   'interpretation' — a reasonable expectation of correct behaviour, but
+//                       connecting it to the spec text takes a judgement call,
+//                       or the spec doesn't address it at all.
+//   'feedback'        — everything else: cosmetic opinions, missing conveniences,
+//                       code/compliance hygiene. The spec gives no basis to expect it.
+//
 // `highImpact` is a separate axis from `difficulty`: difficulty is how hard the
 // bug is to find, highImpact is how much it matters once found. It takes two
 // things being true together, not one:
@@ -31,6 +45,7 @@ export const bugs = [
   // here, matching how the source exploratory report grouped it.
   {
     id: 1,
+    confidence: 'specification',
     title: "Contractions ending in 're not detected at all",
     category: "E-Prime Detection — False Negatives",
     highImpact: true,
@@ -42,6 +57,7 @@ export const bugs = [
   },
   {
     id: 2,
+    confidence: 'interpretation',
     title: "Single quotes hide violations",
     category: "E-Prime Detection — False Negatives",
     highImpact: false,
@@ -53,6 +69,7 @@ export const bugs = [
   },
   {
     id: 3,
+    confidence: 'specification',
     title: "Curly vs straight apostrophe handled differently",
     category: "E-Prime Detection — False Negatives",
     highImpact: true,
@@ -64,6 +81,7 @@ export const bugs = [
   },
   {
     id: 4,
+    confidence: 'specification',
     title: "Typesetter apostrophe not recognized",
     category: "E-Prime Detection — False Negatives",
     highImpact: true,
@@ -75,6 +93,7 @@ export const bugs = [
   },
   {
     id: 5,
+    confidence: 'interpretation',
     title: "No context awareness for 'being'",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -86,6 +105,7 @@ export const bugs = [
   },
   {
     id: 6,
+    confidence: 'interpretation',
     title: "HTML tags create false positives",
     category: "E-Prime Detection — False Positives",
     highImpact: false,
@@ -97,6 +117,7 @@ export const bugs = [
   },
   {
     id: 7,
+    confidence: 'interpretation',
     title: "Double quotes caught but single quotes not",
     category: "E-Prime Detection — False Negatives",
     highImpact: false,
@@ -108,6 +129,7 @@ export const bugs = [
   },
   {
     id: 8,
+    confidence: 'specification',
     title: "Possessive names incorrectly flagged",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -119,6 +141,7 @@ export const bugs = [
   },
   {
     id: 9,
+    confidence: 'interpretation',
     title: "Plural possessives not detected",
     category: "E-Prime Detection — False Negatives",
     highImpact: true,
@@ -132,6 +155,7 @@ export const bugs = [
   // ─── Word Count (10–14) ────────────────────────────────────────────────────
   {
     id: 10,
+    confidence: 'specification',
     title: "Word count wrong with newlines",
     category: "Word Count",
     highImpact: true,
@@ -143,6 +167,7 @@ export const bugs = [
   },
   {
     id: 11,
+    confidence: 'specification',
     title: "Newline-separated words counted as one",
     category: "Word Count",
     highImpact: true,
@@ -154,6 +179,7 @@ export const bugs = [
   },
   {
     id: 12,
+    confidence: 'interpretation',
     title: "Only spaces count as word separators",
     category: "Word Count",
     highImpact: false,
@@ -165,6 +191,7 @@ export const bugs = [
   },
   {
     id: 13,
+    confidence: 'interpretation',
     title: "Curly apostrophe splits words in count",
     category: "Word Count",
     highImpact: false,
@@ -176,6 +203,7 @@ export const bugs = [
   },
   {
     id: 14,
+    confidence: 'interpretation',
     title: "Violation count contradicts word count",
     category: "Word Count",
     highImpact: false,
@@ -189,6 +217,7 @@ export const bugs = [
   // ─── Input Handling (15) ───────────────────────────────────────────────────
   {
     id: 15,
+    confidence: 'interpretation',
     title: "Empty input accepted without warning",
     category: "Input Handling",
     highImpact: false,
@@ -202,6 +231,7 @@ export const bugs = [
   // ─── Display (20, 21, 24, 27) ─────────────────────────────────────────────
   {
     id: 20,
+    confidence: 'interpretation',
     title: "Extra line breaks from special characters",
     category: "Display",
     highImpact: false,
@@ -213,6 +243,7 @@ export const bugs = [
   },
   {
     id: 21,
+    confidence: 'interpretation',
     title: "Trailing spaces cause alignment issues",
     category: "Display",
     highImpact: false,
@@ -224,6 +255,7 @@ export const bugs = [
   },
   {
     id: 24,
+    confidence: 'interpretation',
     title: "Long text overflows the output box",
     category: "Display",
     highImpact: false,
@@ -235,6 +267,7 @@ export const bugs = [
   },
   {
     id: 27,
+    confidence: 'feedback',
     title: "Cannot distinguish l from I in font",
     category: "Display",
     highImpact: false,
@@ -248,6 +281,7 @@ export const bugs = [
   // ─── Performance (32) ─────────────────────────────────────────────────────
   {
     id: 32,
+    confidence: 'interpretation',
     title: "Performance degrades with large input",
     category: "Performance",
     highImpact: true,
@@ -261,6 +295,7 @@ export const bugs = [
   // ─── Internationalization (39, 40, 41) ─────────────────────────────────────
   {
     id: 39,
+    confidence: 'specification',
     title: "Non-English characters break word display",
     category: "Internationalization",
     highImpact: true,
@@ -272,6 +307,7 @@ export const bugs = [
   },
   {
     id: 40,
+    confidence: 'interpretation',
     title: "Lithuanian characters not handled",
     category: "Internationalization",
     highImpact: true,
@@ -283,6 +319,7 @@ export const bugs = [
   },
   {
     id: 41,
+    confidence: 'specification',
     title: "Japanese and CJK languages not handled",
     category: "Internationalization",
     highImpact: true,
@@ -298,6 +335,7 @@ export const bugs = [
   // ─── Action-Dependent ──────────────────────────────────────────────────────
   {
     id: 16,
+    confidence: 'interpretation',
     title: "Enter key behaves inconsistently",
     category: "Input Handling",
     highImpact: false,
@@ -308,6 +346,7 @@ export const bugs = [
   },
   {
     id: 17,
+    confidence: 'interpretation',
     title: "Enter key does not submit the form",
     category: "Input Handling",
     highImpact: false,
@@ -318,6 +357,7 @@ export const bugs = [
   },
   {
     id: 18,
+    confidence: 'feedback',
     title: "No clear or reset button",
     category: "Missing Feature",
     highImpact: false,
@@ -328,6 +368,7 @@ export const bugs = [
   },
   {
     id: 19,
+    confidence: 'feedback',
     title: "Ctrl+R does not clear text in Firefox",
     category: "Browser Specific",
     highImpact: false,
@@ -338,6 +379,7 @@ export const bugs = [
   },
   {
     id: 25,
+    confidence: 'interpretation',
     title: "Textarea resizable beyond viewport",
     category: "Layout",
     highImpact: false,
@@ -348,6 +390,7 @@ export const bugs = [
   },
   {
     id: 31,
+    confidence: 'interpretation',
     title: "Browser zoom breaks layout",
     category: "Responsive",
     highImpact: true,
@@ -358,6 +401,7 @@ export const bugs = [
   },
   {
     id: 38,
+    confidence: 'feedback',
     title: "No fallback when JavaScript is disabled",
     category: "Accessibility",
     highImpact: false,
@@ -370,6 +414,7 @@ export const bugs = [
   // ─── Observation / Inspection ──────────────────────────────────────────────
   {
     id: 22,
+    confidence: 'feedback',
     title: "Output box not aligned with container",
     category: "Layout",
     highImpact: false,
@@ -380,6 +425,7 @@ export const bugs = [
   },
   {
     id: 23,
+    confidence: 'feedback',
     title: "Output positioned too far left",
     category: "Layout",
     highImpact: false,
@@ -390,6 +436,7 @@ export const bugs = [
   },
   {
     id: 26,
+    confidence: 'feedback',
     title: "Font inconsistency across the page",
     category: "Visual",
     highImpact: false,
@@ -400,6 +447,7 @@ export const bugs = [
   },
   {
     id: 28,
+    confidence: 'interpretation',
     title: "Text input positioned below output",
     category: "Layout",
     highImpact: false,
@@ -410,6 +458,7 @@ export const bugs = [
   },
   {
     id: 29,
+    confidence: 'interpretation',
     title: "Landscape mobile view broken",
     category: "Responsive",
     highImpact: true,
@@ -420,6 +469,7 @@ export const bugs = [
   },
   {
     id: 30,
+    confidence: 'specification',
     title: "Not responsive for mobile devices",
     category: "Responsive",
     highImpact: true,
@@ -430,6 +480,7 @@ export const bugs = [
   },
   {
     id: 33,
+    confidence: 'interpretation',
     title: "Vertical scrolling blocked",
     category: "Layout",
     highImpact: true,
@@ -440,6 +491,7 @@ export const bugs = [
   },
   {
     id: 34,
+    confidence: 'feedback',
     title: "Safari scroll bug persists until restart",
     category: "Browser Specific",
     highImpact: false,
@@ -450,6 +502,7 @@ export const bugs = [
   },
   {
     id: 35,
+    confidence: 'interpretation',
     title: "Images missing alt text",
     category: "Accessibility",
     highImpact: false,
@@ -460,6 +513,7 @@ export const bugs = [
   },
   {
     id: 36,
+    confidence: 'interpretation',
     title: "Color contrast warnings",
     category: "Accessibility",
     highImpact: false,
@@ -470,6 +524,7 @@ export const bugs = [
   },
   {
     id: 37,
+    confidence: 'interpretation',
     title: "Red and blue on grey fails contrast standards",
     category: "Accessibility",
     highImpact: true,
@@ -480,6 +535,7 @@ export const bugs = [
   },
   {
     id: 42,
+    confidence: 'interpretation',
     title: "Color coding meaning is unclear",
     category: "UX",
     highImpact: false,
@@ -490,6 +546,7 @@ export const bugs = [
   },
   {
     id: 43,
+    confidence: 'feedback',
     title: "Excessive whitespace in layout",
     category: "Layout",
     highImpact: false,
@@ -500,6 +557,7 @@ export const bugs = [
   },
   {
     id: 44,
+    confidence: 'feedback',
     title: "Instructions are unclear or insufficient",
     category: "UX",
     highImpact: false,
@@ -510,6 +568,7 @@ export const bugs = [
   },
   {
     id: 45,
+    confidence: 'feedback',
     title: "Missing placeholder text in input field",
     category: "UX",
     highImpact: false,
@@ -520,6 +579,7 @@ export const bugs = [
   },
   {
     id: 46,
+    confidence: 'feedback',
     title: "Inconsistent terminology",
     category: "UX",
     highImpact: false,
@@ -530,6 +590,7 @@ export const bugs = [
   },
   {
     id: 47,
+    confidence: 'feedback',
     title: "Page title and heading are awkward",
     category: "Content",
     highImpact: false,
@@ -540,6 +601,7 @@ export const bugs = [
   },
   {
     id: 48,
+    confidence: 'feedback',
     title: "License banner is too prominent",
     category: "Layout",
     highImpact: false,
@@ -550,6 +612,7 @@ export const bugs = [
   },
   {
     id: 50,
+    confidence: 'feedback',
     title: "URL structure exposes source code",
     category: "Security",
     highImpact: false,
@@ -560,6 +623,7 @@ export const bugs = [
   },
   {
     id: 52,
+    confidence: 'feedback',
     title: "Favicon missing, returns 404",
     category: "Assets",
     highImpact: false,
@@ -570,6 +634,7 @@ export const bugs = [
   },
   {
     id: 53,
+    confidence: 'feedback',
     title: "security.txt file not present",
     category: "Security",
     highImpact: false,
@@ -580,6 +645,7 @@ export const bugs = [
   },
   {
     id: 54,
+    confidence: 'feedback',
     title: "License displayed as image not text",
     category: "Content",
     highImpact: false,
@@ -590,6 +656,7 @@ export const bugs = [
   },
   {
     id: 55,
+    confidence: 'feedback',
     title: "Large image impacts page load",
     category: "Performance",
     highImpact: false,
@@ -600,6 +667,7 @@ export const bugs = [
   },
   {
     id: 56,
+    confidence: 'feedback',
     title: "CSS validation errors",
     category: "Code Quality",
     highImpact: false,
@@ -610,6 +678,7 @@ export const bugs = [
   },
   {
     id: 57,
+    confidence: 'feedback',
     title: "HTML validation errors",
     category: "Code Quality",
     highImpact: false,
@@ -620,6 +689,7 @@ export const bugs = [
   },
   {
     id: 58,
+    confidence: 'feedback',
     title: "Inconsistent ID naming conventions",
     category: "Code Quality",
     highImpact: false,
@@ -630,6 +700,7 @@ export const bugs = [
   },
   {
     id: 59,
+    confidence: 'feedback',
     title: "No privacy notice or policy",
     category: "Legal",
     highImpact: false,
@@ -646,6 +717,7 @@ export const bugs = [
   // plural possessives under #9, and markup false positives under #6.
   {
     id: 60,
+    confidence: 'specification',
     title: "Digit next to letters creates a false violation",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -657,6 +729,7 @@ export const bugs = [
   },
   {
     id: 61,
+    confidence: 'specification',
     title: "Hyphenated words split and flag the second half",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -668,6 +741,7 @@ export const bugs = [
   },
   {
     id: 62,
+    confidence: 'specification',
     title: "Lone punctuation counted as a word",
     category: "Word Count",
     highImpact: false,
@@ -679,6 +753,7 @@ export const bugs = [
   },
   {
     id: 63,
+    confidence: 'specification',
     title: "Words on separate lines are joined in the output",
     category: "Display",
     highImpact: true,
@@ -690,6 +765,7 @@ export const bugs = [
   },
   {
     id: 64,
+    confidence: 'specification',
     title: "Typed HTML entities are decoded in the output",
     category: "Display",
     highImpact: false,
@@ -701,6 +777,7 @@ export const bugs = [
   },
   {
     id: 65,
+    confidence: 'interpretation',
     title: "Invisible characters produce violations in a single word",
     category: "E-Prime Detection — False Positives",
     highImpact: false,
@@ -720,6 +797,7 @@ export const bugs = [
   // not just imprecise, and #66 is the bug that description was reaching for.
   {
     id: 66,
+    confidence: 'interpretation',
     title: "'s contractions downgraded to a lower-severity warning",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -731,6 +809,7 @@ export const bugs = [
   },
   {
     id: 67,
+    confidence: 'interpretation',
     title: "let's flagged as a to-be violation",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -742,6 +821,7 @@ export const bugs = [
   },
   {
     id: 68,
+    confidence: 'specification',
     title: "Acronyms matching a to-be word are flagged as violations",
     category: "E-Prime Detection — False Positives",
     highImpact: true,
@@ -753,6 +833,7 @@ export const bugs = [
   },
   {
     id: 69,
+    confidence: 'specification',
     title: "Underscore splits a word and invents a violation",
     category: "E-Prime Detection — False Positives",
     highImpact: false,
@@ -764,6 +845,7 @@ export const bugs = [
   },
   {
     id: 70,
+    confidence: 'interpretation',
     title: "A word with two apostrophes is checked from the wrong one",
     category: "E-Prime Detection — False Negatives",
     highImpact: false,
@@ -775,6 +857,7 @@ export const bugs = [
   },
   {
     id: 71,
+    confidence: 'specification',
     title: "No viewport meta tag",
     category: "Responsive",
     highImpact: true,
@@ -785,6 +868,7 @@ export const bugs = [
   },
   {
     id: 72,
+    confidence: 'specification',
     title: "Results have no aria-live region",
     category: "Accessibility",
     highImpact: false,
@@ -795,6 +879,7 @@ export const bugs = [
   },
   {
     id: 73,
+    confidence: 'specification',
     title: "No visible focus indicator anywhere on the page",
     category: "Accessibility",
     highImpact: false,
@@ -805,6 +890,7 @@ export const bugs = [
   },
   {
     id: 74,
+    confidence: 'feedback',
     title: "No charset meta tag in the document",
     category: "Code Quality",
     highImpact: false,
