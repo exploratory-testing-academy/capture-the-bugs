@@ -26,6 +26,17 @@
         <div class="stats-filter" role="group" aria-label="Time range">
           <button type="button" id="filter-all" class="filter-btn filter-btn-active" data-filter="all" aria-pressed="true">All time</button>
           <button type="button" id="filter-today" class="filter-btn" data-filter="today" aria-pressed="false">Today</button>
+          <button type="button" id="filter-custom" class="filter-btn" data-filter="custom" aria-pressed="false">Custom range</button>
+        </div>
+
+        <div id="custom-range-controls" class="custom-range-controls" style="display:none">
+          <label class="custom-range-field">From
+            <input type="datetime-local" id="custom-range-start">
+          </label>
+          <label class="custom-range-field">To
+            <input type="datetime-local" id="custom-range-end">
+          </label>
+          <span class="hint custom-range-hint">Matched against when each session started, in your browser's own time zone. Leave either side blank for an open end.</span>
         </div>
 
         <div class="score-summary card">

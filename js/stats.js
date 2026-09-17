@@ -31,9 +31,13 @@ const errorEl = document.getElementById('stats-error');
 const bodyEl = document.getElementById('stats-body');
 const filterAllBtn = document.getElementById('filter-all');
 const filterTodayBtn = document.getElementById('filter-today');
+const filterCustomBtn = document.getElementById('filter-custom');
+const customRangeControls = document.getElementById('custom-range-controls');
+const customRangeStartInput = document.getElementById('custom-range-start');
+const customRangeEndInput = document.getElementById('custom-range-end');
 
 // The full session list and answer keys as loaded, kept aside so switching
-// between "today" and "all time" is a re-filter, not a re-fetch.
+// between "today", "all time" and a custom range is a re-filter, not a re-fetch.
 let allSessions = [];
 let allKeysByTarget = new Map();
 let currentFilter = 'all';
@@ -141,6 +145,29 @@ function isToday(isoString) {
   return d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate();
+}
+
+// Whether a session started within [start, end], each an open end when null.
+// Both sides come from <input type="datetime-local">, which the DOM already
+// hands back parsed in the viewer's own timezone — same posture as isToday,
+// so "yesterday 12–14" means 12–14 wherever the viewer's browser thinks it is.
+function isWithinRange(isoString, start, end) {
+  const d = new Date(isoString);
+  if (start && d < start) return false;
+  if (end && d > end) return false;
+  return true;
+}
+
+// datetime-local's value is "YYYY-MM-DDTHH:mm" with no offset, which the Date
+// constructor already parses as local time — exactly the interpretation we want.
+function parseLocalDateTime(value) {
+  return value ? new Date(value) : null;
+}
+
+function emptyStateMessage() {
+  if (currentFilter === 'today') return 'No sessions today.';
+  if (currentFilter === 'custom') return 'No sessions in that range.';
+  return 'Nothing recorded yet.';
 }
 
 // Pairs each written finding with what the evaluator made of it.
@@ -587,19 +614,19 @@ export function render(sessions, keysByTarget) {
   renderInto(
     document.getElementById('hint-stats'),
     hintLevelGroups(sessions).map(([level, group]) => hintLevelRow(level, group)),
-    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
+    emptyStateMessage()
   );
   renderInto(
     document.getElementById('guidance-stats'),
     guidanceRows(sessions),
-    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
+    emptyStateMessage()
   );
   renderInto(
     document.getElementById('session-stats'),
     [...sessions]
       .sort((a, b) => new Date(b.first_seen) - new Date(a.first_seen))
       .map(s => sessionRow(s, bugsById)),
-    currentFilter === 'today' ? 'No sessions today.' : 'Nothing recorded yet.'
+    emptyStateMessage()
   );
 
   loadingEl.style.display = 'none';
@@ -613,13 +640,29 @@ function setFilter(filter) {
   filterAllBtn.setAttribute('aria-pressed', String(filter === 'all'));
   filterTodayBtn.classList.toggle('filter-btn-active', filter === 'today');
   filterTodayBtn.setAttribute('aria-pressed', String(filter === 'today'));
+  filterCustomBtn.classList.toggle('filter-btn-active', filter === 'custom');
+  filterCustomBtn.setAttribute('aria-pressed', String(filter === 'custom'));
+  customRangeControls.style.display = filter === 'custom' ? 'flex' : 'none';
 
-  const sessions = filter === 'today' ? allSessions.filter(s => isToday(s.first_seen)) : allSessions;
+  let sessions = allSessions;
+  if (filter === 'today') {
+    sessions = allSessions.filter(s => isToday(s.first_seen));
+  } else if (filter === 'custom') {
+    const start = parseLocalDateTime(customRangeStartInput.value);
+    const end = parseLocalDateTime(customRangeEndInput.value);
+    sessions = allSessions.filter(s => isWithinRange(s.first_seen, start, end));
+  }
   render(sessions, allKeysByTarget);
 }
 
 filterAllBtn.addEventListener('click', () => setFilter('all'));
 filterTodayBtn.addEventListener('click', () => setFilter('today'));
+filterCustomBtn.addEventListener('click', () => setFilter('custom'));
+// Re-filters live as either bound changes, but only while the custom view is
+// the one on screen — editing them while "Today" is active should not cause
+// a filter switch out from under the viewer.
+customRangeStartInput.addEventListener('change', () => { if (currentFilter === 'custom') setFilter('custom'); });
+customRangeEndInput.addEventListener('change', () => { if (currentFilter === 'custom') setFilter('custom'); });
 
 function fail(err) {
   loadingEl.style.display = 'none';
@@ -671,7 +714,7 @@ export async function load() {
 // Mirrors app.js's window.__ctb hooks: lets the tests drive rendering from
 // fixtures, and makes the shaping poke-able from DevTools.
 window.__ctbStats = {
-  load, render, rollUp, rateRows, setFilter, isToday,
+  load, render, rollUp, rateRows, setFilter, isToday, isWithinRange,
   hintLevelGroups, hintLevelStats, guidanceRows
 };
 

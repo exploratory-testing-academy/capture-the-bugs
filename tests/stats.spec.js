@@ -135,6 +135,54 @@ test('shows a today-specific empty state when nothing happened today', async ({ 
   await expect(page.locator('#guidance-stats .empty-state')).toHaveText('No sessions today.');
 });
 
+// datetime-local wants "YYYY-MM-DDTHH:mm" in local time, not the UTC
+// toISOString() gives.
+function toLocalDateTimeValue(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+test('narrows to sessions started within a custom range', async ({ page }) => {
+  const now = new Date();
+  const anHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const inAnHour = new Date(now.getTime() + 60 * 60 * 1000);
+  const summaries = [
+    { ...SUMMARIES[0], session_code: 'in-range-session', first_seen: now.toISOString(), last_seen: now.toISOString() },
+    { ...SUMMARIES[1], session_code: 'past-session' } // August 2026 — outside any range built around "now".
+  ];
+
+  await openStats(page, { summaries, evaluates: [], findings: [] });
+
+  await expect(page.locator('#custom-range-controls')).toBeHidden();
+  await page.locator('#filter-custom').click();
+
+  await expect(page.locator('#filter-custom')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#filter-all')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#custom-range-controls')).toBeVisible();
+  // Nothing entered yet: both bounds are open, so both sessions still show.
+  await expect(page.locator('#stat-sessions')).toHaveText('2');
+
+  await page.locator('#custom-range-start').fill(toLocalDateTimeValue(anHourAgo));
+  await page.locator('#custom-range-end').fill(toLocalDateTimeValue(inAnHour));
+
+  await expect(page.locator('#stat-sessions')).toHaveText('1');
+  await expect(page.locator('#session-stats code')).toHaveText('in-range-session');
+
+  // Pull the end bound below "now" and even the in-range session drops out.
+  await page.locator('#custom-range-end').fill(toLocalDateTimeValue(anHourAgo));
+
+  await expect(page.locator('#stat-sessions')).toHaveText('0');
+  await expect(page.locator('#session-stats .empty-state')).toHaveText('No sessions in that range.');
+  await expect(page.locator('#hint-stats .empty-state')).toHaveText('No sessions in that range.');
+  await expect(page.locator('#guidance-stats .empty-state')).toHaveText('No sessions in that range.');
+
+  // Switching back to "All time" hides the range controls again.
+  await page.locator('#filter-all').click();
+  await expect(page.locator('#custom-range-controls')).toBeHidden();
+  await expect(page.locator('#stat-sessions')).toHaveText('2');
+});
+
 test('breaks down results by the hint level in effect', async ({ page }) => {
   await openStats(page);
 
